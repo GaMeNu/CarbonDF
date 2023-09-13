@@ -1,0 +1,4 @@
+fun dh(aa: any, yy, r: vct) {
+    hello(loc[1,2,3], vct[1,2,3]);
+
+}
