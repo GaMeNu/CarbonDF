@@ -1,72 +1,36 @@
 lexer grammar CarbonDFLexer;
-
 /**
- * CarbonDF lexer
- *
- * based on the Python3 ANTLR Lexer:
- * https://github.com/antlr/grammars-v4/blob/master/python/python3/Python3Lexer.g4
- * Credits:
- *  Python parser: ANTLR
- *  CarbonDF: GaMeNu
+ * CarbonDF Parser
+ * (C) GaMeNu under GPLv3
  */
+
+import ValuesLexer;
 
 tokens { INDENT, DEDENT }
 
-TEXT
- : STRING_LITERAL
- ;
 
-NUMBER: '-'? DIGIT_SEQ ('.' DIGIT_SEQ)?;
 
 FUNDEF_KEYWORD: 'fun';
 PROCDEF_KEYWORD: 'proc';
-IF_KEYWORD: 'if';
 
-INDENT: '\t' | '    ';
+TA_ANY: 'any';
+TA_STRING: 'str';
+TA_ST: 'txt' | 'styled' | 'styledtext' | 'text';
+TA_NUM: 'num';
+TA_LOC: 'loc';
+TA_VECT: 'vct' | 'vect';
+TA_LIST: 'list';
+TA_DICT: 'dict';
 
+PAR_OPEN: '(';
+PAR_CLOSE: ')';
+VAR_ASSIGN: '=';
+VAR_INCREMENT: '+=';
+VAR_DECREMENT: '-=';
+OP_ADD: '+';
+OP_SUB: '-';
+OP_MULT: '*';
+OP_DIV: '/';
+LINE_END: ';';
 
-NEWLINE
- : ( '\r'? '\n' | '\r' | '\f'
-   )
- ;
-
-
-METH_PAR_OPEN: '(';
-ARG_SEP: ',';
-METH_PAR_CLOSE: ')';
-DEF_LINE_END: ':';
-
-
-STRING_LITERAL
- : SHORT_STRING
- ;
-
-
-SAFE_TEXT
- : SAFE_LETTER+
- ;
-
-
-
-fragment SHORT_STRING
- : '\'' ( STRING_ESCAPE_SEQ | ~[\\\r\n\f'] )* '\''
- | '"' ( STRING_ESCAPE_SEQ | ~[\\\r\n\f"] )* '"'
- ;
-
-fragment SAFE_LETTER
- : [A-Za-z1-9_\-]
- ;
-
-fragment STRING_ESCAPE_SEQ
- : '\\' .
- | '\\' NEWLINE
- ;
-
-fragment DIGIT_SEQ: DIGIT+;
-fragment DIGIT: [0-9];
-
-
-
-SPACES
- : [ \t]+
- ;
+SAFE_TEXT: [A-Za-z_] [A-Za-z0-9\-_]* ;

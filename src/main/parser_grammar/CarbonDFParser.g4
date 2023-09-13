@@ -1,35 +1,53 @@
 parser grammar CarbonDFParser;
+/**
+ * CarbonDF Parser
+ * (C) GaMeNu under GPLv3
+ */
+import ValuesParser;
 
 options {
     tokenVocab= CarbonDFLexer;
 }
 
-base: (codeline | NEWLINE)*? EOF;
+base: startdef block;
 
-codeline: def;
+startdef
+ : (FUNDEF_KEYWORD | PROCDEF_KEYWORD)
+ WHITESPACES SAFE_TEXT WHITESPACES? '(' WHITESPACES? def_params? WHITESPACES? ')' WHITESPACES?;
 
-def: ( funcdef | procdef ) block_content;
+def_params: def_param (ARG_SEP def_param)*;
 
-
-funcdef: FUNDEF_KEYWORD SPACES SAFE_TEXT ':' NEWLINE;
-
-procdef: PROCDEF_KEYWORD SPACES SAFE_TEXT ':' NEWLINE;
-
-
-block_content: (block_line)+;
-
-block_line: INDENT (any_method)? line_sep;
-
-any_method: normal_method;
-
-normal_method: SAFE_TEXT '(' method_arguments? ')';
-
-method_arguments: any_item (SPACES? ',' (SPACES)*? any_item)*;
-
-any_item: simple_item;
-simple_item: TEXT | NUMBER;
-
-line_sep
- : EOF
- | NEWLINE
+def_param
+ : SAFE_TEXT
+   ( WHITESPACES? ':' WHITESPACES?
+   type_annotations
+   )?
  ;
+
+block: '{' WHITESPACES? single_line* WHITESPACES? '}';
+
+single_line: (fun_call) LINE_END;
+
+fun_call: SAFE_TEXT '(' call_params? ')';
+
+call_params
+ : (standalone_item | SAFE_TEXT)
+ (ARG_SEP
+   (standalone_item | SAFE_TEXT)
+ )*
+ ;
+/*
+setvar
+ : SAFE_TEXT WHITESPACES?
+ ( '=' WHITESPACES? )
+ ;
+
+setvar_exp
+ : any_item | fun_call | single_operation;
+
+single_operation: NUMBER WHITESPACES? (OP_ADD | OP_SUB | OP_MULT | OP_DIV) WHITESPACES? NUMBER;
+
+var_inc: SAFE_TEXT WHITESPACES? ('+=' | '-=') NUMBER;
+*/
+
+type_annotations: (TA_ANY | TA_STRING | TA_ST | TA_NUM | TA_LOC | TA_VECT | TA_LIST | TA_DICT);
