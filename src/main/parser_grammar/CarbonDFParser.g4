@@ -13,7 +13,10 @@ base: startdef block;
 
 startdef
  : (FUNDEF_KEYWORD | PROCDEF_KEYWORD)
- WHITESPACES SAFE_TEXT WHITESPACES? '(' WHITESPACES? def_params? WHITESPACES? ')' WHITESPACES?;
+ WHITESPACES def_name WHITESPACES?
+ '(' WHITESPACES? def_params? WHITESPACES? ')' WHITESPACES?;
+
+def_name: SAFE_TEXT;
 
 def_params: def_param (ARG_SEP def_param)*;
 
@@ -26,7 +29,7 @@ def_param
 
 block: '{' WHITESPACES? single_line* WHITESPACES? '}';
 
-single_line: (fun_call) LINE_END;
+single_line: (fun_call LINE_END) | compound_statement;
 
 fun_call: SAFE_TEXT '(' call_params? ')';
 
@@ -36,18 +39,16 @@ call_params
    (standalone_item | SAFE_TEXT)
  )*
  ;
-/*
-setvar
- : SAFE_TEXT WHITESPACES?
- ( '=' WHITESPACES? )
- ;
 
-setvar_exp
- : any_item | fun_call | single_operation;
+compound_statement:  if_statement;
 
-single_operation: NUMBER WHITESPACES? (OP_ADD | OP_SUB | OP_MULT | OP_DIV) WHITESPACES? NUMBER;
-
-var_inc: SAFE_TEXT WHITESPACES? ('+=' | '-=') NUMBER;
-*/
+if_statement:
+ IF_KEYWORD WHITESPACES?
+ '(' ')' WHITESPACES?
+ block WHITESPACES?
+ (
+  ELSE_KEYWORD
+  WHITESPACES? block WHITESPACES?
+ )?;
 
 type_annotations: (TA_ANY | TA_STRING | TA_ST | TA_NUM | TA_LOC | TA_VECT | TA_LIST | TA_DICT);

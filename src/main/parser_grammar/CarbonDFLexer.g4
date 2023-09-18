@@ -12,6 +12,8 @@ tokens { INDENT, DEDENT }
 
 FUNDEF_KEYWORD: 'fun';
 PROCDEF_KEYWORD: 'proc';
+IF_KEYWORD: 'if';
+ELSE_KEYWORD: 'else';
 
 TA_ANY: 'any';
 TA_STRING: 'str';

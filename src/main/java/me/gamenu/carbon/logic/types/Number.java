@@ -1,14 +1,13 @@
 package me.gamenu.carbon.logic.types;
 
-public class Number extends BaseItem {
-    double value;
-    public Number(String id, double name) {
-        super("num");
-        this.value = name;
-        data.put("name", String.valueOf(name));
+public class Number extends BaseValue {
+
+    public Number(String id, double value) {
+        super(ValueType.NUM);
+        this.value = value;
     }
 
-    public double getValue() {
-        return value;
+    public Double getValue() {
+        return (double) this.value;
     }
 }

@@ -1,11 +1,33 @@
 package me.gamenu.carbon.logic.blocks;
 
 public abstract class BaseBlock {
-    String id;
-    String block;
+    BlockType type;
 
-    public BaseBlock(String block) {
-        this.id = "block";
-        this.block = block;
+    BaseBlock next;
+
+    public BaseBlock(BlockType type) {
+        this.type = type;
+        next = null;
+    }
+
+    public BaseBlock getNext(){
+        return next;
+    }
+
+    public void setNext(BaseBlock block){
+        this.next = block;
+    }
+
+    public BaseBlock getLast(){
+        BaseBlock current;
+        current = this;
+        while (current.getNext() != null) {
+            current = current.getNext();
+        }
+        return current;
+    }
+
+    public BlockType getType(){
+        return this.type;
     }
 }
