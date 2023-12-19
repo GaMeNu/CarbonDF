@@ -8,7 +8,7 @@ import java.util.zip.*;
 
 public class GZipUtils {
     private static final Charset charset = StandardCharsets.UTF_8;
-    public static byte[] compress(String string) throws Exception{
+    public static byte[] compress(String string) throws IOException{
         if (string == null){
             throw new NullPointerException("Received null as input");
         }

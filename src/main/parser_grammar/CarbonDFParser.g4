@@ -9,7 +9,7 @@ options {
     tokenVocab= CarbonDFLexer;
 }
 
-base: startdef block;
+base: (startdef block WHITESPACES?)*;
 
 startdef
  : def_keyword
