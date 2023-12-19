@@ -10,7 +10,7 @@ public class BlockTypes {
 
     private static final HashMap<Type, String> typeMap = new HashMap<>() {{
         put(Type.FUNC, "func");
-        put(Type.PROC, "proc");
+        put(Type.PROC, "process");
     }};
 
     public static String typeID(Type type) {
