@@ -2,14 +2,12 @@ package me.gamenu.carbon.logic.compile;
 
 import me.gamenu.carbon.logic.blocks.BlockTypes;
 import me.gamenu.carbon.logic.blocks.BlocksTable;
-import me.gamenu.carbon.logic.blocks.CodeBlock;
 import me.gamenu.carbon.logic.blocks.CodeBlockLineStarter;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import parser.CarbonDFParser;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 
 public class Compile {
 
@@ -37,12 +35,11 @@ public class Compile {
         parser.CarbonDFParser parser = fileToBaseParser(filepath);
         CarbonDFParser.BaseContext base = parser.base();
         BlocksTable table = new BlocksTable();
-        ;
 
         if (base.startdef().def_keyword().FUNDEF_KEYWORD() != null){
             table.addBlock(new CodeBlockLineStarter(BlockTypes.Type.FUNC, null, base.startdef().def_name().getText()));
         } else if (base.startdef().def_keyword().PROCDEF_KEYWORD() != null) {
-            table.addBlock(new CodeBlockLineStarter(BlockTypes.Type.PROC, null, base.startdef().def_name().getText()));
+            table.addBlock(new CodeBlockLineStarter(BlockTypes.Type.PROCESS, null, base.startdef().def_name().getText()));
         }
 
         try {
