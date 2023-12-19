@@ -12,9 +12,11 @@ options {
 base: startdef block;
 
 startdef
- : (FUNDEF_KEYWORD | PROCDEF_KEYWORD)
+ : def_keyword
  WHITESPACES def_name WHITESPACES?
  '(' WHITESPACES? def_params? WHITESPACES? ')' WHITESPACES?;
+
+def_keyword: (FUNDEF_KEYWORD | PROCDEF_KEYWORD);
 
 def_name: SAFE_TEXT;
 

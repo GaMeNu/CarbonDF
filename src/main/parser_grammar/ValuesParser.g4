@@ -9,13 +9,10 @@ options {
 }
 
 any_item: standalone_item | complex_item;
-standalone_item: simple_item | compound_item;
+standalone_item: simple_item;
 
 // very basic items.
 simple_item: NUMBER | STRING_LITERAL | STYLED_TEXT;
-
-// Items that are standalone in DF
-compound_item: location | vector;
 
 // Items that don't exist standalone in DF, and can only live in vars
 complex_item: list | dict;
