@@ -4,6 +4,6 @@ import me.gamenu.carbon.logic.compile.Compile;
 public class Main {
 
     public static void main(String[] args) {
-        Compile.fromFile("src/main/resources/tests/test.df");
+        Compile.fromFile("src/main/resources/tests/multiple-defs.dfc");
     }
 }

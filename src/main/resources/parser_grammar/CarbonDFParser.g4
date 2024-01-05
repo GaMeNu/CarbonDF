@@ -9,14 +9,14 @@ options {
     tokenVocab= CarbonDFLexer;
 }
 
-base: (startdef block WHITESPACES?)*;
+base: WHITESPACES? ((startdef block) WHITESPACES?)*;
 
 startdef
  : def_keyword
  WHITESPACES def_name WHITESPACES?
  '(' WHITESPACES? def_params? WHITESPACES? ')' WHITESPACES?;
 
-def_keyword: (FUNDEF_KEYWORD | PROCDEF_KEYWORD);
+def_keyword: (FUNDEF_KEYWORD | PROCDEF_KEYWORD | EVENTDEF_KEYWORD);
 
 def_name: SAFE_TEXT;
 
@@ -31,7 +31,7 @@ def_param
 
 block: '{' WHITESPACES? single_line* WHITESPACES? '}';
 
-single_line: (fun_call LINE_END) | compound_statement;
+single_line: (fun_call LINE_END) | compound_statement | comment;
 
 fun_call: SAFE_TEXT '(' call_params? ')';
 
@@ -52,5 +52,10 @@ if_statement:
   ELSE_KEYWORD
   WHITESPACES? block WHITESPACES?
  )?;
+
+
+comment: comment_multi_line;
+
+comment_multi_line: COMMENT_MULTI_LINE_OPEN (ANY_TEXT)+? COMMENT_MULTI_LINE_CLOSE;
 
 type_annotations: (TA_ANY | TA_STRING | TA_ST | TA_NUM | TA_LOC | TA_VECT | TA_LIST | TA_DICT);

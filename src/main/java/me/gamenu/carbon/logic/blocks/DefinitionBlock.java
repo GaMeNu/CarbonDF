@@ -3,9 +3,9 @@ package me.gamenu.carbon.logic.blocks;
 import me.gamenu.carbon.logic.etc.toJSONObject;
 import org.json.JSONObject;
 
-public class CodeBlockLineStarter extends CodeBlock implements toJSONObject {
+public class DefinitionBlock extends CodeBlock implements toJSONObject {
     String name;
-    public CodeBlockLineStarter(BlockTypes.Type blockType, ActionTypes.Type actionType, String name) {
+    public DefinitionBlock(BlockTypes.Type blockType, ActionTypes.Type actionType, String name) {
         super(blockType, actionType);
         this.name = name;
     }

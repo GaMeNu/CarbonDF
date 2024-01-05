@@ -4,11 +4,15 @@ import java.util.HashMap;
 
 public class ActionTypes {
     public enum Type {
-        FUNC
+        NULL,
+        JOIN,
+        ENTITY_DAMAGE_ENTITY
     }
 
     public static final HashMap<Type, String> typeMap = new HashMap<>(){{
-        typeMap.put(Type.FUNC, null);
+        put(Type.NULL, null);
+        put(Type.JOIN, "Join");
+        put(Type.ENTITY_DAMAGE_ENTITY, "EntityDmgEntity");
     }};
 
     public static String typeID(ActionTypes.Type type) {

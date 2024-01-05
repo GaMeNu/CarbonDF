@@ -36,9 +36,13 @@ WHITESPACES
  ;
 
 NEWLINE
- : ( '\r'? '\n' | '\r' | '\f'
+ : (
+   '\n' | '\r' | '\f' | '\r\n'
    )
  ;
+
+
+ANY_TEXT: '\u0020'..'\u007E';
 
 fragment SHORT_STRING
 : '\'' ( STRING_ESCAPE_SEQ | ~[\\\r\n\f'] )* '\''

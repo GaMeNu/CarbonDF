@@ -2,14 +2,14 @@ package me.gamenu.carbon.logic.compile;
 
 import me.gamenu.carbon.logic.blocks.BlockTypes;
 import me.gamenu.carbon.logic.blocks.BlocksTable;
-import me.gamenu.carbon.logic.blocks.CodeBlockLineStarter;
+import me.gamenu.carbon.logic.blocks.DefinitionBlock;
+import me.gamenu.carbon.logic.blocks.EventBlock;
 import me.gamenu.carbon.parser.CarbonDFLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import me.gamenu.carbon.parser.CarbonDFParser;
 
 import java.io.*;
-import java.util.zip.ZipException;
 
 public class Compile {
 
@@ -22,23 +22,26 @@ public class Compile {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
+
         try {
             programLexer = new CarbonDFLexer(CharStreams.fromStream(inputStream));
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
         CommonTokenStream tokens = new CommonTokenStream(programLexer);
         return new CarbonDFParser(tokens);
-
     }
 
     public static BlocksTable singleDefinitionTable(CarbonDFParser.StartdefContext context){
         BlocksTable table = new BlocksTable();
         if (context.def_keyword().FUNDEF_KEYWORD() != null){
-            table.addBlock(new CodeBlockLineStarter(BlockTypes.Type.FUNC, null, context.def_name().getText()));
+            table.addBlock(new DefinitionBlock(BlockTypes.Type.FUNC, null, context.def_name().getText()));
         } else if (context.def_keyword().PROCDEF_KEYWORD() != null) {
-            table.addBlock(new CodeBlockLineStarter(BlockTypes.Type.PROCESS, null, context.def_name().getText()));
+            table.addBlock(new DefinitionBlock(BlockTypes.Type.PROCESS, null, context.def_name().getText()));
+        } else if (context.def_keyword().EVENTDEF_KEYWORD() != null) {
+            table.addBlock(EventBlock.fromID(context.def_name().getText()));
         }
 
         return table;
@@ -62,15 +65,8 @@ public class Compile {
         CarbonDFParser parser = fileToBaseParser(filepath);
         CarbonDFParser.BaseContext base = parser.base();
 
-        System.out.println(base.startdef().getText());
-
-
-
-        try {
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        for (CarbonDFParser.StartdefContext startdef : base.startdef()) {
+            compiledTable(singleDefinitionTable(startdef));
         }
-        // H4sIAAAAAAAAA6tWSsrJT84uVrKKrlZKLEoHMqprdZRSEksSlayUSlKLS5R0IEqA3LTSvGQgNzMFyIaI1cbWAgCihkiGQgAAAA==
     }
 }

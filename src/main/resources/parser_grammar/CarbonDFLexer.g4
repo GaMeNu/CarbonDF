@@ -9,11 +9,16 @@ import ValuesLexer;
 tokens { INDENT, DEDENT }
 
 
-
 FUNDEF_KEYWORD: 'fun';
 PROCDEF_KEYWORD: 'proc';
+EVENTDEF_KEYWORD: 'event';
 IF_KEYWORD: 'if';
 ELSE_KEYWORD: 'else';
+
+
+COMMENT_SINGLE_LINE: '//';
+COMMENT_MULTI_LINE_OPEN: '/*';
+COMMENT_MULTI_LINE_CLOSE: '*/';
 
 TA_ANY: 'any';
 TA_STRING: 'str';
