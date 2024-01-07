@@ -40,7 +40,7 @@ var_name: SAFE_TEXT;
 
 var_value: (var_name | standalone_item | fun_call);
 
-block: '{' WHITESPACES? single_line* WHITESPACES? '}';
+block: '{' WHITESPACES? (single_line WHITESPACES?)* '}';
 
 
 comment: COMMENT_MULTI_LINE | comment_single_line;
