@@ -41,7 +41,7 @@ NEWLINE
    )
  ;
 
-
+SAFE_TEXT: [A-Za-z_] [A-Za-z0-9\-_]* ;
 ANY_TEXT: '\u0020'..'\u007E';
 
 fragment SHORT_STRING

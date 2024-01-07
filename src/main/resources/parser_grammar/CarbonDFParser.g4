@@ -3,7 +3,9 @@ parser grammar CarbonDFParser;
  * CarbonDF Parser
  * (C) GaMeNu under GPLv3
  */
-import ValuesParser;
+
+ import LineParser;
+
 
 options {
     tokenVocab= CarbonDFLexer;
@@ -29,33 +31,6 @@ def_param
    )?
  ;
 
-block: '{' WHITESPACES? single_line* WHITESPACES? '}';
 
-single_line: (fun_call LINE_END) | compound_statement | comment;
-
-fun_call: SAFE_TEXT '(' call_params? ')';
-
-call_params
- : (standalone_item | SAFE_TEXT)
- (ARG_SEP
-   (standalone_item | SAFE_TEXT)
- )*
- ;
-
-compound_statement:  if_statement;
-
-if_statement:
- IF_KEYWORD WHITESPACES?
- '(' ')' WHITESPACES?
- block WHITESPACES?
- (
-  ELSE_KEYWORD
-  WHITESPACES? block WHITESPACES?
- )?;
-
-
-comment: comment_multi_line;
-
-comment_multi_line: COMMENT_MULTI_LINE_OPEN (ANY_TEXT)+? COMMENT_MULTI_LINE_CLOSE;
 
 type_annotations: (TA_ANY | TA_STRING | TA_ST | TA_NUM | TA_LOC | TA_VECT | TA_LIST | TA_DICT);

@@ -1,18 +1,22 @@
 package me.gamenu.carbon.logic.compile;
 
-import me.gamenu.carbon.logic.blocks.BlockTypes;
 import me.gamenu.carbon.logic.blocks.BlocksTable;
-import me.gamenu.carbon.logic.blocks.DefinitionBlock;
-import me.gamenu.carbon.logic.blocks.EventBlock;
+import me.gamenu.carbon.logic.exceptions.BaseCarbonException;
 import me.gamenu.carbon.parser.CarbonDFLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import me.gamenu.carbon.parser.CarbonDFParser;
 
 import java.io.*;
+import java.util.ArrayList;
 
 public class Compile {
 
+    /**
+     * Gets a file path and opens the file, lets ANTLR parse it, and returns the Parser
+     * @param input input filepath
+     * @return CarbonDFParser
+     */
     private static CarbonDFParser fileToBaseParser(String input){
         InputStream inputStream;
         CarbonDFLexer programLexer;
@@ -34,20 +38,12 @@ public class Compile {
         return new CarbonDFParser(tokens);
     }
 
-    public static BlocksTable singleDefinitionTable(CarbonDFParser.StartdefContext context){
-        BlocksTable table = new BlocksTable();
-        if (context.def_keyword().FUNDEF_KEYWORD() != null){
-            table.addBlock(new DefinitionBlock(BlockTypes.Type.FUNC, null, context.def_name().getText()));
-        } else if (context.def_keyword().PROCDEF_KEYWORD() != null) {
-            table.addBlock(new DefinitionBlock(BlockTypes.Type.PROCESS, null, context.def_name().getText()));
-        } else if (context.def_keyword().EVENTDEF_KEYWORD() != null) {
-            table.addBlock(EventBlock.fromID(context.def_name().getText()));
-        }
-
-        return table;
-    }
-
-    public static void compiledTable(BlocksTable table){
+    /**
+     * Takes in a single BlocksTable and compiles it to JSON, then GZips the result.
+     * @param table BlocksTable
+     * @return String
+     */
+    public static String compiledTable(BlocksTable table){
 
         System.out.println(table.toJSON().toString());
         byte[] compressed;
@@ -58,15 +54,24 @@ public class Compile {
             throw new RuntimeException(e);
         }
 
-        System.out.println(GZipUtils.bytesToString(compressed));
+        return GZipUtils.bytesToString(compressed);
     }
 
+    /**
+     * Takes an input filepath and compiles the entire file.
+     * @param filepath String
+     */
     public static void fromFile(String filepath){
         CarbonDFParser parser = fileToBaseParser(filepath);
         CarbonDFParser.BaseContext base = parser.base();
-
-        for (CarbonDFParser.StartdefContext startdef : base.startdef()) {
-            compiledTable(singleDefinitionTable(startdef));
+        ArrayList<BlocksTable> tableList;
+        try {
+            tableList = Translator.translate(base);
+        } catch (BaseCarbonException e) {
+            throw new RuntimeException(e);
+        }
+        for (BlocksTable table : tableList){
+            System.out.println(compiledTable(table));
         }
     }
 }
