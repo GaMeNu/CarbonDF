@@ -11,7 +11,7 @@ options {
     tokenVocab= CarbonDFLexer;
 }
 
-base: WHITESPACES? ((startdef block) WHITESPACES?)*;
+base: WHITESPACES? (((startdef block) | comment) WHITESPACES?)*;
 
 startdef
  : def_keyword

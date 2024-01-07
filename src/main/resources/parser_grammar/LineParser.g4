@@ -43,6 +43,6 @@ var_value: (var_name | standalone_item | fun_call);
 block: '{' WHITESPACES? single_line* WHITESPACES? '}';
 
 
-comment: comment_multi_line;
+comment: COMMENT_MULTI_LINE | comment_single_line;
+comment_single_line: COMMENT_SINGLE_LINE_OPEN COMMENT_SINGLE_LINE_TEXT;
 
-comment_multi_line: COMMENT_MULTI_LINE_OPEN (ANY_TEXT | SAFE_TEXT | WHITESPACES | .)*? COMMENT_MULTI_LINE_CLOSE;

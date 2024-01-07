@@ -1,4 +1,6 @@
 
-fun hello(wow, wow2: any, foo: num){
-
+fun HelloWorld(foo, bar: any, baz: num){
+  /* A nice little comment
+   * right here :D
+   */
 }

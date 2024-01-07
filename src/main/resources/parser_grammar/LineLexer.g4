@@ -8,7 +8,7 @@ import ValuesLexer;
 IF_KEYWORD: 'if';
 ELSE_KEYWORD: 'else';
 
-COMMENT_SINGLE_LINE: '//' SAFE_TEXT LINE_END;
+COMMENT_SINGLE_LINE_OPEN: '//' -> mode(CommentMode);
 COMMENT_MULTI_LINE_OPEN: '/*';
 COMMENT_MULTI_LINE_CLOSE: '*/';
 
@@ -31,3 +31,17 @@ OP_SUB: '-';
 OP_MULT: '*';
 OP_DIV: '/';
 LINE_END: ';';
+
+COMMENT_MULTI_LINE:
+ COMMENT_MULTI_LINE_OPEN (
+  ANY_TEXT
+  | SAFE_TEXT
+  | WHITESPACES
+  | .
+  )*?
+ COMMENT_MULTI_LINE_CLOSE;
+
+
+mode CommentMode;
+
+COMMENT_SINGLE_LINE_TEXT: ~[\r\n]* -> mode(DEFAULT_MODE);
