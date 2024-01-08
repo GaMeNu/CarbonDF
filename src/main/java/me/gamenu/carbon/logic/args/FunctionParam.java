@@ -5,7 +5,7 @@ public class FunctionParam extends CodeArg{
         super(Type.PARAM);
 
         dataPut("name", name);
-        dataPut("type", getID(type));
+        dataPut("type", type.getID());
         dataPut("plural", false);
         dataPut("optional", false);
     }

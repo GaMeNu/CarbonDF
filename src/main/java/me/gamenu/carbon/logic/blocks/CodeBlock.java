@@ -36,9 +36,9 @@ public class CodeBlock implements toJSONObject {
     public JSONObject toJSON(){
         JSONObject block = new JSONObject();
         block.put("id", "block");
-        block.put("block", BlockTypes.typeID(blockType));
+        block.put("block", blockType.getID());
         if (actionType != null){
-            block.put("action", ActionTypes.typeID(actionType));
+            block.put("action", actionType.getID());
         }
         block.put("args", args.toJSON());
         return block;

@@ -1,23 +1,22 @@
 package me.gamenu.carbon.logic.blocks;
 
-import java.util.HashMap;
+import me.gamenu.carbon.logic.etc.hasTypeID;
 
 public class BlockTypes {
-    public enum Type {
-        FUNC,
-        PROCESS,
-        EVENT_PLAYER,
-        EVENT_ENTITY
-    }
+    public enum Type implements hasTypeID {
+        FUNC("func"),
+        PROCESS("process"),
+        EVENT_PLAYER("event"),
+        EVENT_ENTITY("entity_event");
 
-    private static final HashMap<Type, String> typeMap = new HashMap<>() {{
-        put(Type.FUNC, "func");
-        put(Type.PROCESS, "process");
-        put(Type.EVENT_PLAYER, "event");
-        put(Type.EVENT_ENTITY, "entity_event");
-    }};
+        private final String id;
 
-    public static String typeID(Type type) {
-        return typeMap.get(type);
+        Type(String id) {
+            this.id =id;
+        }
+
+        public String getID() {
+            return id;
+        }
     }
 }

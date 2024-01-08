@@ -1,31 +1,28 @@
 package me.gamenu.carbon.logic.args;
 
+import me.gamenu.carbon.logic.etc.hasTypeID;
 import me.gamenu.carbon.logic.etc.toJSONObject;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-
 public class CodeArg implements toJSONObject {
 
-    public enum Type{
-        ANY,
-        PARAM,
-        VAR,
-        NUM
+    public enum Type implements hasTypeID {
+        ANY("any"),
+        PARAM("pn_el"),
+        VAR("var"),
+        NUM("num");
+
+        private final String id;
+
+        Type(String id){
+            this.id = id;
+        }
+
+        @Override
+        public String getID() {
+            return id;
+        }
     }
-
-    private static final HashMap<Type, String> typeMap = new HashMap<>(){{
-        put(Type.ANY, "any");
-       put(Type.PARAM, "pn_el");
-       put(Type.VAR, "var");
-       put(Type.NUM, "num");
-    }};
-
-    public static String getID(Type type){
-        return typeMap.get(type);
-    }
-
-
 
     Type type;
     JSONObject data;
@@ -47,7 +44,7 @@ public class CodeArg implements toJSONObject {
     @Override
     public JSONObject toJSON() {
         return new JSONObject()
-                .put("id", getID(type))
+                .put("id", type.getID())
                 .put("data", data);
     }
 }

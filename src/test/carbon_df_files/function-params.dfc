@@ -1,6 +1,12 @@
 
 fun HelloWorld(foo, bar: any, baz: num){
-  /* A nice little comment
-   * right here :D
-   */
+    /* A nice little comment
+     * right here :D
+     */
+
+    // Comment 2
+}
+
+event Join(){
+
 }
