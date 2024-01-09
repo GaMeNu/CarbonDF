@@ -8,13 +8,13 @@ import java.util.HashMap;
 
 public class EventBlock extends CodeBlock implements toJSONObject{
 
-    public EventBlock(BlockTypes.Type blockType, ActionTypes.Type actionType) {
+    public EventBlock(BlockType blockType, ActionType actionType) {
         super(blockType, actionType);
     }
 
     public static HashMap<String, EventBlock> eventIDs = new HashMap<>(){{
-        put("Join", new EventBlock(BlockTypes.Type.EVENT_PLAYER, ActionTypes.Type.EVENT_JOIN));
-        put("onEntityDamageEntity", new EventBlock(BlockTypes.Type.EVENT_ENTITY, ActionTypes.Type.EVENT_ENTITY_DAMAGE_ENTITY));
+        put("Join", new EventBlock(BlockType.EVENT_PLAYER, ActionType.EVENT_JOIN));
+        put("EntityDamageEntity", new EventBlock(BlockType.EVENT_ENTITY, ActionType.EVENT_ENTITY_DAMAGE_ENTITY));
     }};
 
     public EventBlock(EventBlock other){

@@ -6,22 +6,22 @@ import org.json.JSONObject;
 
 public class CodeBlock implements toJSONObject {
 
-    BlockTypes.Type blockType;
-    ActionTypes.Type actionType;
+    BlockType blockType;
+    ActionType actionType;
 
     ArgsTable args;
 
-    public CodeBlock(BlockTypes.Type blockType, ActionTypes.Type actionType){
+    public CodeBlock(BlockType blockType, ActionType actionType){
         this.blockType = blockType;
         this.actionType = actionType;
         this.args = new ArgsTable();
     }
 
-    public BlockTypes.Type getBlockType() {
+    public BlockType getBlockType() {
         return blockType;
     }
 
-    public ActionTypes.Type getActionType() {
+    public ActionType getActionType() {
         return actionType;
     }
 

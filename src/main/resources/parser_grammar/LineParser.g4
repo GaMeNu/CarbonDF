@@ -3,7 +3,7 @@ parser grammar LineParser;
 import ValuesParser;
 
 options {
-    tokenVocab= LineLexer;
+    tokenVocab=LineLexer;
 }
 
 single_line: (simple_statement
@@ -25,7 +25,9 @@ if_statement:
  )?;
 
 
-fun_call: SAFE_TEXT '(' call_params? ')';
+fun_call: fun_body '(' call_params? ')';
+
+fun_body: (SAFE_TEXT CALL_CHAIN_DIV)* SAFE_TEXT;
 
 call_params
  : (standalone_item | SAFE_TEXT)
