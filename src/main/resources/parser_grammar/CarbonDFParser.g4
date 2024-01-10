@@ -14,9 +14,13 @@ options {
 base: WHITESPACES? (((startdef block) | comment) WHITESPACES?)*;
 
 startdef
- : def_keyword
+ : (def_modifiers WHITESPACES)? def_keyword
  WHITESPACES def_name WHITESPACES?
  '(' WHITESPACES? def_params? WHITESPACES? ')' WHITESPACES?;
+
+def_modifiers: vis_modifier;
+
+vis_modifier: MOD_VISIBLE | MOD_INVISIBLE;
 
 def_keyword: (FUNDEF_KEYWORD | PROCDEF_KEYWORD | EVENTDEF_KEYWORD);
 

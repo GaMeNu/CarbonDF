@@ -1,5 +1,4 @@
 package me.gamenu.carbon.logic.args;
-
 import me.gamenu.carbon.logic.etc.toJSONObject;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -13,30 +12,69 @@ public class ArgsTable implements toJSONObject {
 
     ArrayList<CodeArg> argList;
 
-    private static <T> void addItemToList(List<? super T> arrayList, int index, T item){
-        if (index > arrayList.size()){
-            for (int i = arrayList.size(); i < index; i++){
-                arrayList.add(null);
-                System.out.println("Added null");
+    /**
+     * Adds NULL to a List up to a given finalSize
+     * list.size() == finalSize
+     * (Last item index in list is finalSize - 1)
+     * @param list list to extend
+     * @param finalSize final size of the list
+     * @param <T> Object
+     */
+    private static <T> void addNulls(List<? super T> list, int finalSize){
+        if (finalSize > list.size()){
+            for (int i = list.size(); i < finalSize; i++){
+                list.add(null);
             }
         }
-        arrayList.add(index, item);
     }
 
-    public ArgsTable(){
+    private static <T> void addItemToList(List<? super T> list, int index, T item){
+        addNulls(list, index);
+        list.add(index, item);
+    }
+
+
+    private static <T> void setItemInList(List<? super T> list, int index, T item){
+        addNulls(list, index+1);
+        list.set(index, item);
+    }
+
+    public ArgsTable() {
         argList = new ArrayList<>();
     }
 
-    public void set(int slot, CodeArg codeArg){
-        argList.set(slot, codeArg);
-    }
 
-    public void add(CodeArg codeArg){
+    /**
+     * adds at the first empty (null) place, or a the end of the list if none found
+     * @param codeArg CodeArg to add
+     * @return this
+     */
+    public ArgsTable addAtFirstNull(CodeArg codeArg){
+        // Iterate over the list
+        for (int i = 0; i < argList.size(); i++){
+
+            // If we've found a null value
+            // we set the value to the CodeArg and return this.
+            if (argList.get(i) == null){
+                argList.set(i, codeArg);
+                return this;
+            }
+
+        }
+
         argList.add(codeArg);
+        return this;
+
     }
 
-    public void add (int slot, CodeArg codeArg){
+    public ArgsTable set(int slot, CodeArg codeArg){
+        setItemInList(argList, slot, codeArg);
+        return this;
+    }
+
+    public ArgsTable add (int slot, CodeArg codeArg){
         addItemToList(argList, slot, codeArg);
+        return this;
     }
 
     public CodeArg get(int slot){

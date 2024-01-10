@@ -25,9 +25,13 @@ if_statement:
  )?;
 
 
-fun_call: fun_body '(' call_params? ')';
+fun_call: fun_body single_fun_call ;
 
-fun_body: (SAFE_TEXT CALL_CHAIN_DIV)* SAFE_TEXT;
+single_fun_call: SAFE_TEXT '(' call_params? ')';
+
+single_class_call: SAFE_TEXT;
+
+fun_body: ((single_fun_call | single_class_call) '.')*;
 
 call_params
  : (standalone_item | SAFE_TEXT)

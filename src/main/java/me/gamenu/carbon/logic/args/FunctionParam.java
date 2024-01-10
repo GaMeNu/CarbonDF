@@ -4,10 +4,10 @@ public class FunctionParam extends CodeArg{
     public FunctionParam(String name, ArgType type){
         super(ArgType.PARAM);
 
-        dataPut("name", name);
-        dataPut("type", type.getID());
-        dataPut("plural", false);
-        dataPut("optional", false);
+        putData("name", name);
+        putData("type", type.getID());
+        putData("plural", false);
+        putData("optional", false);
     }
 
 }

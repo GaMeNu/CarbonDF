@@ -13,3 +13,5 @@ FUNDEF_KEYWORD: 'fun';
 PROCDEF_KEYWORD: 'proc';
 EVENTDEF_KEYWORD: 'event';
 
+MOD_VISIBLE: 'shown';
+MOD_INVISIBLE: 'hidden';

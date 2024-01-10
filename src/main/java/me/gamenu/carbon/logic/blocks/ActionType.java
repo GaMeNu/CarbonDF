@@ -3,7 +3,8 @@ package me.gamenu.carbon.logic.blocks;
 public enum ActionType {
     NULL(null),
     EVENT_JOIN("Join"),
-    EVENT_ENTITY_DAMAGE_ENTITY("EntityDmgEntity");
+    EVENT_ENTITY_DAMAGE_ENTITY("EntityDmgEntity"),
+    DYNAMIC("dynamic");
 
     private final String id;
 

@@ -6,7 +6,10 @@ public enum ArgType implements hasTypeID {
     ANY("any"),
     PARAM("pn_el"),
     VAR("var"),
-    NUM("num");
+    NUM("num"),
+
+    HINT("hint"),
+    TAG("bl_tag");
 
     private final String id;
 

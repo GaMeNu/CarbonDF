@@ -12,11 +12,12 @@ public class CodeArg implements toJSONObject {
         data = new JSONObject();
     }
 
-    public void dataPut(String key, Object value) {
+    public CodeArg putData(String key, Object value) {
         data.put(key, value);
+        return this;
     }
 
-    public Object dataGet(String key){
+    public Object getData(String key){
         return data.get(key);
     }
 
