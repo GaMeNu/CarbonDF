@@ -3,7 +3,7 @@
 
 ## Why?
 DiamondFire code is annoying to write. Checking parameters and variables is slow, and you have to move around constantly.
-CDF lets you write actual code (with syntax somewhere between Python and Kotlin) and have it compile back to DiamondFire code.
+CDF lets you write actual code (with syntax similar to Java) and have it compile back to DiamondFire code.
 
 ## How?
 Parsing is taken care of by ANTLR (see src/main/parser_grammar).
@@ -18,7 +18,7 @@ fun multiply(param, other_param: num){
 ```
 
 ```CarbonDF
-proc lightningLoop() {
+hidden proc lightningLoop() {
     launchPower = 20;
     repeat forever() {
         
