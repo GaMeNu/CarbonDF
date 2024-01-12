@@ -13,12 +13,23 @@ public class BlocksTable implements toJSONObject {
         table = new ArrayList<>();
     }
 
-    public void addBlock(CodeBlock block){
+    public BlocksTable add(CodeBlock block){
         table.add(block);
+        return this;
     }
 
-    public CodeBlock getBlock(int i){
+    public CodeBlock get(int i){
         return table.get(i);
+    }
+
+    /**
+     * Basically ArrayList.addAll()
+     * @param other table to extend
+     * @return this
+     */
+    public BlocksTable extend(BlocksTable other){
+        this.table.addAll(other.table);
+        return this;
     }
 
 
@@ -26,7 +37,7 @@ public class BlocksTable implements toJSONObject {
     public JSONObject toJSON() {
         JSONArray blocksArray = new JSONArray();
         for (int i = 0; i < table.size(); i++){
-            blocksArray.put(getBlock(i).toJSON());
+            blocksArray.put(get(i).toJSON());
         }
         JSONObject res = new JSONObject();
         res.put("blocks", blocksArray);

@@ -25,13 +25,14 @@ if_statement:
  )?;
 
 
-fun_call: fun_body single_fun_call ;
+fun_call: fun_call_chain* single_fun_call ;
 
 single_fun_call: SAFE_TEXT '(' call_params? ')';
 
-single_class_call: SAFE_TEXT;
+single_token_call: SAFE_TEXT;
 
-fun_body: ((single_fun_call | single_class_call) '.')*;
+fun_call_chain: ((single_fun_call | single_token_call) '.');
+
 
 call_params
  : (standalone_item | SAFE_TEXT)
@@ -40,7 +41,9 @@ call_params
  )*
  ;
 
-var_assign: var_name WHITESPACES? VAR_ASSIGN WHITESPACES? var_value;
+var_assign: var_scope WHITESPACES var_name WHITESPACES? VAR_ASSIGN WHITESPACES? var_value;
+
+var_scope: SCOPE_SAVED | SCOPE_GLOBAL | SCOPE_LOCAL | SCOPE_LINE;
 
 var_name: SAFE_TEXT;
 

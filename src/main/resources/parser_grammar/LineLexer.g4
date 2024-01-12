@@ -21,6 +21,11 @@ TA_VECT: 'vct' | 'vect';
 TA_LIST: 'list';
 TA_DICT: 'dict';
 
+SCOPE_SAVED: 'saved';
+SCOPE_GLOBAL: 'global';
+SCOPE_LOCAL: 'local';
+SCOPE_LINE: 'line';
+
 PAR_OPEN: '(';
 PAR_CLOSE: ')';
 VAR_ASSIGN: '=';

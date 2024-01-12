@@ -65,11 +65,13 @@ public class Compile {
         CarbonDFParser parser = fileToBaseParser(filepath);
         CarbonDFParser.BaseContext base = parser.base();
         ArrayList<BlocksTable> tableList;
+
         try {
-            tableList = Translator.translate(base);
+            tableList = TranslateDefinition.translate(base);
         } catch (BaseCarbonException e) {
             throw new RuntimeException(e);
         }
+
         for (BlocksTable table : tableList){
             System.out.println(compiledTable(table));
         }

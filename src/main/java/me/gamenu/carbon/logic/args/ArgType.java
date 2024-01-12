@@ -1,8 +1,8 @@
 package me.gamenu.carbon.logic.args;
 
-import me.gamenu.carbon.logic.etc.hasTypeID;
+import me.gamenu.carbon.logic.etc.CarbonTypeEnum;
 
-public enum ArgType implements hasTypeID {
+public enum ArgType implements CarbonTypeEnum {
     ANY("any"),
     PARAM("pn_el"),
     VAR("var"),
@@ -19,6 +19,11 @@ public enum ArgType implements hasTypeID {
 
     @Override
     public String getID() {
+        return id;
+    }
+
+    @Override
+    public String getCodeName() {
         return id;
     }
 }

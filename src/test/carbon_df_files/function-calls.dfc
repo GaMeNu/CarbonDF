@@ -1,0 +1,4 @@
+fun test(){
+    PlayerAction.sendMessage();
+    default.sendMessage();
+}

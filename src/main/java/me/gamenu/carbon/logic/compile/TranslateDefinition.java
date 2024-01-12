@@ -8,12 +8,16 @@ import me.gamenu.carbon.parser.CarbonDFParser;
 
 import java.util.ArrayList;
 
-public class Translator {
+import static me.gamenu.carbon.logic.compile.TranslateBlock.translateBlock;
+
+public class TranslateDefinition {
     public static ArrayList<BlocksTable> translate(CarbonDFParser.BaseContext base) throws BaseCarbonException {
         ArrayList<BlocksTable> tableList = new ArrayList<>();
 
-        for (CarbonDFParser.StartdefContext startdef : base.startdef()) {
-            tableList.add(singleDefinitionTable(startdef));
+        for (int i=0; i < base.startdef().size(); i++) {
+            BlocksTable bt = singleDefinitionTable(base.startdef(i));
+            bt.extend(translateBlock(base.block(i)));
+            tableList.add(bt);
         }
 
         return tableList;
@@ -38,7 +42,8 @@ public class Translator {
             throw new UnrecognizedTokenException(context.def_keyword().getText());
         }
 
-        table.addBlock(newBlock);
+        table.add(newBlock);
+
         return table;
     }
 
@@ -72,6 +77,9 @@ public class Translator {
             ArgType type;
 
             CarbonDFParser.Type_annotationsContext typeContext = paramContext.type_annotations();
+
+            // Can I PLEASE use switch-case here?
+            // WHY ANTLR WHY
             if (typeContext == null) type = ArgType.ANY;
             else if (typeContext.TA_ANY() != null) type = ArgType.ANY;
             else if (typeContext.TA_NUM() != null) type = ArgType.NUM;
