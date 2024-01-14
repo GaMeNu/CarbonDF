@@ -1,4 +1,5 @@
-fun test(){
-    PlayerAction.sendMessage();
-    default.sendMessage();
+fun HelloThere(param1: any){
+  sendMessage("Hello world!");
+  default.sendMessage(6.9);
+  selection.sendMessage(420);
 }

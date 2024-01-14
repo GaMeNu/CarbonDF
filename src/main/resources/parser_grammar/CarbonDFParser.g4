@@ -4,7 +4,7 @@ parser grammar CarbonDFParser;
  * (C) GaMeNu under GPLv3
  */
 
- import LineParser;
+import LineParser;
 
 
 options {

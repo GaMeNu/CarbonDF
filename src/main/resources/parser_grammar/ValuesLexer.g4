@@ -9,6 +9,8 @@ LIST_CLOSE: ']';
 DICT_OPEN: '{';
 DICT_CLOSE: '}';
 DICT_KEYVAL: ':';
+STRING_DEFINE_1: '"';
+STRING_DEFINE_2: '\'';
 ARG_SEP: WHITESPACES? ',' WHITESPACES?;
 
 TA_ANY: 'any';
@@ -21,14 +23,6 @@ TA_LIST: 'list';
 TA_DICT: 'dict';
 
 NUMBER: ('-' | '+')? DIGIT_SEQ ('.' DIGIT_SEQ)?;
-
-STYLED_TEXT
- : TA_ST SHORT_STRING
- ;
-
-STRING_LITERAL
- : SHORT_STRING
- ;
 
 WHITESPACES
  :
@@ -44,16 +38,31 @@ NEWLINE
 SAFE_TEXT: [A-Za-z_] [A-Za-z0-9\-_]* ;
 ANY_TEXT: '\u0020'..'\u007E';
 
-fragment SHORT_STRING
-: '\'' ( STRING_ESCAPE_SEQ | ~[\\\r\n\f'] )* '\''
-| '"' ( STRING_ESCAPE_SEQ | ~[\\\r\n\f"] )* '"'
-;
-
-fragment STRING_ESCAPE_SEQ
- : '\\' .
- | '\\' NEWLINE
- ;
 
 fragment DIGIT_SEQ
  : [0-9]+
+ ;
+
+
+STRING_LITERAL_SIMPLE
+: (
+  STRING_DEFINE_1
+   (~([\\\r\n\f'])
+   | STRING_ESCAPE_SEQ
+   )*
+  STRING_DEFINE_1
+  )
+| (
+  STRING_DEFINE_2
+   (~([\\\r\n\f'])
+   | STRING_ESCAPE_SEQ
+   )*
+  STRING_DEFINE_2
+  )
+;
+
+
+STRING_ESCAPE_SEQ
+ : '\\' .
+ | '\\' NEWLINE
  ;

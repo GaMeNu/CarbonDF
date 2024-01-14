@@ -35,11 +35,13 @@ fun_call_chain: ((single_fun_call | single_token_call) '.');
 
 
 call_params
- : (standalone_item | SAFE_TEXT)
+ : call_param
  (ARG_SEP
-   (standalone_item | SAFE_TEXT)
+   call_param
  )*
  ;
+
+call_param: standalone_item | (var_name ('[' var_scope ']')?);
 
 var_assign: var_scope WHITESPACES var_name WHITESPACES? VAR_ASSIGN WHITESPACES? var_value;
 

@@ -29,12 +29,12 @@ public class Compile {
 
         try {
             programLexer = new CarbonDFLexer(CharStreams.fromStream(inputStream));
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
         CommonTokenStream tokens = new CommonTokenStream(programLexer);
+
         return new CarbonDFParser(tokens);
     }
 

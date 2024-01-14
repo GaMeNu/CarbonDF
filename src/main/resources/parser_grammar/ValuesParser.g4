@@ -12,7 +12,7 @@ any_item: standalone_item | complex_item;
 standalone_item: simple_item;
 
 // very basic items.
-simple_item: NUMBER | STRING_LITERAL | STYLED_TEXT;
+simple_item: NUMBER | string;
 
 // Items that don't exist standalone in DF, and can only live in vars
 complex_item: list | dict;
@@ -48,4 +48,10 @@ dict:
 
 dict_pair: key WHITESPACES? ':' WHITESPACES? any_item;
 
-key: STRING_LITERAL;
+string: simple_string;
+
+simple_string
+: STRING_LITERAL_SIMPLE
+;
+
+key: simple_string;

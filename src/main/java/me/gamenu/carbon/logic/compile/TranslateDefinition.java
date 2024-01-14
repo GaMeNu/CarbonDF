@@ -8,15 +8,17 @@ import me.gamenu.carbon.parser.CarbonDFParser;
 
 import java.util.ArrayList;
 
-import static me.gamenu.carbon.logic.compile.TranslateBlock.translateBlock;
-
 public class TranslateDefinition {
     public static ArrayList<BlocksTable> translate(CarbonDFParser.BaseContext base) throws BaseCarbonException {
         ArrayList<BlocksTable> tableList = new ArrayList<>();
 
+        VarTable defTable = new VarTable();
+
+        TranslateBlock blockTranslator = new TranslateBlock(defTable);
+
         for (int i=0; i < base.startdef().size(); i++) {
             BlocksTable bt = singleDefinitionTable(base.startdef(i));
-            bt.extend(translateBlock(base.block(i)));
+            bt.extend(blockTranslator.translateBlock(base.block(i)));
             tableList.add(bt);
         }
 
