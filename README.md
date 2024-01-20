@@ -13,20 +13,20 @@ In the future I may add the ability to import files, a more concise syntax, and 
 ### Syntax examples:
 ```CarbonDF
 fun multiply(param, other_param: num){
-    local temp = param * other_param;
+    local temp = mult(param, other_param);
 }
 ```
 
 ```CarbonDF
 hidden proc lightningLoop() {
     launchPower = 20;
-    repeat forever() {
+    repeat (forever) {
         
         line playerPos = default.location;
         game.summonLightning(playerPos);
         game.createExplosion(playerPos);
         default.launchUp(launchPower);
-        default.sendMessage(st"<#FFFFFF>Thou hast been <#FFFF00>smitten<#FFFFFF>!");
+        default.sendMessage('<#FFFFFF>Thou hast been <#FFFF00>smitten<#FFFFFF>!');
         wait(60);
     }
 }
