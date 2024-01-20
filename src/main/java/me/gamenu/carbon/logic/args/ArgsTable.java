@@ -76,6 +76,15 @@ public class ArgsTable implements toJSONObject {
         addItemToList(argList, slot, codeArg);
         return this;
     }
+    
+    public ArgsTable extend(ArgsTable other){
+        for (CodeArg item :
+                other.argList) {
+            if (item == null) continue;
+            this.addAtFirstNull(item);
+        }
+        return this;
+    }
 
     public CodeArg get(int slot){
         return argList.get(slot);

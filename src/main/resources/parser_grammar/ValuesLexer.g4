@@ -15,7 +15,7 @@ ARG_SEP: WHITESPACES? ',' WHITESPACES?;
 
 TA_ANY: 'any';
 TA_STRING: 'str';
-TA_ST: 'txt' | 'styled' | 'styledtext' | 'text';
+TA_ST: 'stxt';
 TA_NUM: 'num';
 TA_LOC: 'loc';
 TA_VECT: 'vct' | 'vect';
@@ -35,7 +35,7 @@ NEWLINE
    )
  ;
 
-SAFE_TEXT: [A-Za-z_] [A-Za-z0-9\-_]* ;
+SAFE_TEXT: [A-Za-z_%] [A-Za-z0-9\-_%]* ;
 ANY_TEXT: '\u0020'..'\u007E';
 
 
@@ -44,7 +44,7 @@ fragment DIGIT_SEQ
  ;
 
 
-STRING_LITERAL_SIMPLE
+STRING_LITERAL_SIMPLE_1
 : (
   STRING_DEFINE_1
    (~([\\\r\n\f'])
@@ -52,7 +52,10 @@ STRING_LITERAL_SIMPLE
    )*
   STRING_DEFINE_1
   )
-| (
+;
+
+STRING_LITERAL_SIMPLE_2:
+(
   STRING_DEFINE_2
    (~([\\\r\n\f'])
    | STRING_ESCAPE_SEQ

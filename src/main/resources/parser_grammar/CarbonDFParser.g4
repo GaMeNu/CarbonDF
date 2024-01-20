@@ -35,6 +35,3 @@ def_param
    )?
  ;
 
-
-
-type_annotations: (TA_ANY | TA_STRING | TA_ST | TA_NUM | TA_LOC | TA_VECT | TA_LIST | TA_DICT);

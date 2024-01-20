@@ -1,0 +1,16 @@
+fun Wowies(foo: any){
+    local a = 12;
+    local b: str = "Wowzers!";
+    a = b;
+
+    global d = foo;
+
+    saved bar = mult(foo, d);
+    saved baz = sub(bar, foo);
+
+    global w, x, y, z;
+    w = add(1, 2);
+    x = sub(2, 1);
+    y = mult(2, 3);
+    z = div(6, 3);
+}

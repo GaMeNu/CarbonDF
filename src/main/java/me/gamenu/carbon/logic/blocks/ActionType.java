@@ -7,7 +7,13 @@ public enum ActionType {
     EVENT_JOIN("Join", "Join", BlockType.EVENT_PLAYER),
     EVENT_ENTITY_DAMAGE_ENTITY("EntityDmgEntity", "EntityDmgEntity", BlockType.EVENT_ENTITY),
     DYNAMIC("dynamic","null", null),
-    SEND_MESSAGE("SendMessage", "sendMessage", BlockType.PLAYER_ACTION);
+    SEND_MESSAGE("SendMessage", "sendMessage", BlockType.PLAYER_ACTION),
+    SIMPLE_ASSIGN("=", "assign", BlockType.SET_VARIABLE),
+    ADD_NUMBERS("+", "add", BlockType.SET_VARIABLE),
+    SUBTRACT_NUMBERS("-", "sub", BlockType.SET_VARIABLE),
+    MULTIPLY_NUMBERS("x", "mult", BlockType.SET_VARIABLE),
+    DIVIDE_NUMBERS("/", "div", BlockType.SET_VARIABLE)
+    ;
 
 
     private final String id;

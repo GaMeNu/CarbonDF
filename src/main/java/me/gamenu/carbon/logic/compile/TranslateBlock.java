@@ -1,18 +1,18 @@
 package me.gamenu.carbon.logic.compile;
 
-import me.gamenu.carbon.logic.args.ArgType;
-import me.gamenu.carbon.logic.args.ArgsTable;
-import me.gamenu.carbon.logic.args.CodeArg;
+import me.gamenu.carbon.logic.args.*;
 import me.gamenu.carbon.logic.blocks.ActionType;
+import me.gamenu.carbon.logic.blocks.BlockType;
 import me.gamenu.carbon.logic.blocks.BlocksTable;
 import me.gamenu.carbon.logic.blocks.CodeBlock;
 import me.gamenu.carbon.logic.etc.TargetType;
-import me.gamenu.carbon.logic.exceptions.BaseCarbonException;
-import me.gamenu.carbon.logic.exceptions.CarbonException;
-import me.gamenu.carbon.logic.exceptions.UnrecognizedTokenException;
+import me.gamenu.carbon.logic.exceptions.*;
 import me.gamenu.carbon.parser.CarbonDFParser.*;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashMap;
+
+import static me.gamenu.carbon.parser.CarbonDFLexer.*;
 
 public class TranslateBlock {
     private final VarTable table;
@@ -26,15 +26,130 @@ public class TranslateBlock {
             // We SKIP Empty lines and comments
             if (lineContext.isEmpty() || lineContext.comment() != null) continue;
 
-            if (lineContext.simple_statement() != null) codeBlockList.add(parseSimpleStatement(lineContext.simple_statement()));
+            if (lineContext.simple_statement() != null) codeBlockList.extend(parseSimpleStatement(lineContext.simple_statement()));
         }
 
         return codeBlockList;
     }
 
-    public CodeBlock parseSimpleStatement(Simple_statementContext ctx) throws BaseCarbonException {
-        if (ctx.fun_call() != null) return parseFunCall(ctx.fun_call());
+    public BlocksTable parseSimpleStatement(Simple_statementContext ctx) throws BaseCarbonException {
+        if (ctx.fun_call() != null) {
+            BlocksTable retList = new BlocksTable();
+            retList.add(parseFunCall(ctx.fun_call()));
+            return retList;
+        }
+        if (ctx.var_define() != null) return parseVarDefine(ctx.var_define());
+        if (ctx.var_assign() != null) return parseVarAssign(ctx.var_assign());
         return null;
+    }
+
+    private BlocksTable parseVarDefine(Var_defineContext varDefineContext) throws BaseCarbonException{
+        VarScope scope;
+        String varName;
+        ArgType type;
+        VarTable table = new VarTable();
+
+        switch (((TerminalNode) varDefineContext.var_scope().getChild(0)).getSymbol().getType()) {
+            case SCOPE_GLOBAL -> scope = VarScope.GLOBAL;
+            case SCOPE_SAVED -> scope = VarScope.SAVED;
+            case SCOPE_LOCAL -> scope = VarScope.LOCAL;
+            case SCOPE_LINE -> scope = VarScope.LINE;
+            default -> scope = VarScope.GLOBAL;
+        }
+
+        for (Var_assign_unitContext assignUnitCtx :
+                varDefineContext.var_assign().var_assign_unit()) {
+            varName = assignUnitCtx.var_name().getText();
+            if (assignUnitCtx.type_annotations() == null) type = ArgType.ANY;
+            else switch (((TerminalNode) assignUnitCtx.type_annotations().getChild(0)).getSymbol().getType()){
+                case TA_ANY -> type = ArgType.ANY;
+                case TA_NUM -> type = ArgType.NUM;
+                case TA_STRING -> type = ArgType.STRING;
+                case TA_ST -> type = ArgType.STYLED_TEXT;
+                default -> type = ArgType.ANY;
+            }
+
+            table.putVar(varName, scope, type);
+        }
+
+        this.table.extend(table);
+
+        return parseVarAssign(varDefineContext.var_assign());
+    }
+
+    private ArgType getItemType(Standalone_itemContext ctx){
+        if (ctx.simple_item() != null){
+            if (ctx.simple_item().NUMBER() != null) return ArgType.NUM;
+            else if (ctx.simple_item().string() != null) return ArgType.STRING;
+            else if (ctx.simple_item().styled_text() != null) return ArgType.STYLED_TEXT;
+        }
+        return null;
+    }
+
+    private static String trimStringContexts(String string){
+        return string.substring(1, string.length() - 1);
+    }
+
+    private BlocksTable parseVarAssign(Var_assignContext ctx) throws BaseCarbonException{
+
+        BlocksTable bt = new BlocksTable();
+        for (Var_assign_unitContext unitCtx : ctx.var_assign_unit()){
+            if (!this.table.varExists(unitCtx.var_name().getText())) throw new UnknownSymbolException(unitCtx.var_name().getText());
+            String varName = unitCtx.var_name().getText();
+            ArgType typeN = this.table.getVarType(varName);
+
+            int varCode = 4;
+            if (unitCtx.var_value() != null) {
+                //handle varName
+                if (unitCtx.var_value().var_name() != null) {
+                    if (!this.table.varExists(varName)) throw new UnknownSymbolException(varName);
+                    varCode = 1;
+                    ArgType typeE = this.table.getVarType(unitCtx.var_value().var_name().getText());
+                    if (typeN != ArgType.ANY) {
+                        if (typeN != typeE) throw new TypeMismatchException(typeN, typeE);
+                    }
+                }
+
+                //handle standaloneItem
+                else if (unitCtx.var_value().standalone_item() != null) {
+                    varCode = 2;
+                    if (getItemType(unitCtx.var_value().standalone_item()) != typeN && typeN != ArgType.ANY)
+                        throw new TypeMismatchException(typeN, getItemType(unitCtx.var_value().standalone_item()));
+                } else if(unitCtx.var_value().fun_call() != null) {
+                    varCode = 3;
+                }
+                ActionType actionType;
+
+                CodeBlock funRes = null;
+
+                if (varCode == 1 || varCode == 2) {
+                    actionType = ActionType.SIMPLE_ASSIGN;
+                } else if (varCode == 3){
+                    funRes = parseFunCall(unitCtx.var_value().fun_call());
+                    actionType = funRes.getActionType();
+                } else {
+                    actionType = ActionType.SIMPLE_ASSIGN;
+                }
+
+                CodeBlock cb = new CodeBlock(BlockType.SET_VARIABLE, actionType, null);
+                cb.args().addAtFirstNull(new VarArg(varName, this.table.getVarScope(varName)));
+                if (varCode == 1) {
+                    cb.args().addAtFirstNull(new VarArg(unitCtx.var_value().var_name().getText(), this.table.getVarScope(unitCtx.var_value().var_name().getText())));
+                } else if (varCode == 2) {
+                    CodeArg ca = new CodeArg(getItemType(unitCtx.var_value().standalone_item()));
+                    switch (ca.getType()) {
+                        case NUM -> ca.putData("name", unitCtx.var_value().getText());
+                        case STRING, STYLED_TEXT -> ca.putData("name", trimStringContexts(unitCtx.var_value().getText()));
+                    }
+                    cb.args().addAtFirstNull(ca);
+                } else if (varCode == 3) {
+                    cb.args().extend(funRes.args());
+                }
+                bt.add(cb);
+            }
+
+        }
+        return bt;
     }
 
     public CodeBlock parseFunCall(Fun_callContext ctx) throws BaseCarbonException {
@@ -64,7 +179,7 @@ public class TranslateBlock {
         return retBlock;
     }
 
-    public ArgsTable funCallParams(Call_paramsContext ctx){
+    public ArgsTable funCallParams(Call_paramsContext ctx) throws BaseCarbonException {
         ArgsTable args = new ArgsTable();
         CodeArg arg;
         for (Call_paramContext param: ctx.call_param()){
@@ -78,13 +193,11 @@ public class TranslateBlock {
         return args;
     }
 
-    private CodeArg newVarArg(String name, VarTable.VarScope scope){
-        return new CodeArg(ArgType.VAR)
-                .putData("name", name)
-                .putData("scope", scope);
+    private CodeArg newVarArg(String name, VarScope scope){
+        return new VarArg(name, scope);
     }
 
-    private CodeArg varArg(Call_paramContext ctx) {
+    private CodeArg varArg(Call_paramContext ctx) throws UnknownSymbolException {
         String varName = ctx.var_name().getText();
 
         // Var already exists in table
@@ -92,20 +205,9 @@ public class TranslateBlock {
             return newVarArg(varName, table.getVarScope(varName));
         }
 
-        // Var does not exist in table and does not have a defined scope
-        // Set to default - global
-        if (ctx.var_scope() == null) return newVarArg(varName, VarTable.VarScope.GLOBAL);
+        throw new UnknownSymbolException("Could not recognize symbol \"" + varName + "\"");
 
-        // Handle scopes
-        if (ctx.var_scope().SCOPE_GLOBAL() != null) return newVarArg(varName, VarTable.VarScope.GLOBAL);
-        if (ctx.var_scope().SCOPE_SAVED() != null) return newVarArg(varName, VarTable.VarScope.SAVED);
-        if (ctx.var_scope().SCOPE_LOCAL() != null) return newVarArg(varName, VarTable.VarScope.LOCAL);
-        if (ctx.var_scope().SCOPE_LINE() != null) return newVarArg(varName, VarTable.VarScope.LINE);
 
-        // Fuck over the user
-        // I am done with this shit
-        // TODO: fix or throw Warn/Err
-        return null;
     }
 
     private static final HashMap<String, String> translateEscapeSeqs = new HashMap<>(){{
@@ -124,7 +226,12 @@ public class TranslateBlock {
         Simple_itemContext itemCtx = ctx.standalone_item().simple_item();
 
         if (itemCtx.string() != null) {
-            return new CodeArg(ArgType.STRING).putData("name", itemCtx.string().getText().substring(1, itemCtx.string().getText().length()-1));
+            if (itemCtx.string().simple_string() != null)
+                return new CodeArg(ArgType.STRING)
+                    .putData("name", trimStringContexts(itemCtx.string().getText()));
+            else if (itemCtx.string().styled_text() != null)
+                return new CodeArg(ArgType.STYLED_TEXT)
+                        .putData("name", trimStringContexts(itemCtx.string().getText()));
         }
         if (itemCtx.NUMBER() != null) {
             return new CodeArg(ArgType.NUM).putData("name", itemCtx.NUMBER().getText());

@@ -13,7 +13,7 @@ single_line: (simple_statement
 
 compound_statement:  if_statement;
 
-simple_statement: (fun_call | var_assign) LINE_END;
+simple_statement: (fun_call | var_define | var_assign) LINE_END;
 
 if_statement:
  IF_KEYWORD WHITESPACES?
@@ -41,9 +41,13 @@ call_params
  )*
  ;
 
-call_param: standalone_item | (var_name ('[' var_scope ']')?);
+call_param: standalone_item | var_name;
 
-var_assign: var_scope WHITESPACES var_name WHITESPACES? VAR_ASSIGN WHITESPACES? var_value;
+var_define: var_scope WHITESPACES var_assign;
+
+var_assign: var_assign_unit (ARG_SEP var_assign_unit)*;
+
+var_assign_unit: var_name (WHITESPACES? ':' WHITESPACES? type_annotations)? (WHITESPACES? OP_VAR_ASSIGN WHITESPACES? var_value)?;
 
 var_scope: SCOPE_SAVED | SCOPE_GLOBAL | SCOPE_LOCAL | SCOPE_LINE;
 

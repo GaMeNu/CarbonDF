@@ -12,12 +12,16 @@ public class TranslateDefinition {
     public static ArrayList<BlocksTable> translate(CarbonDFParser.BaseContext base) throws BaseCarbonException {
         ArrayList<BlocksTable> tableList = new ArrayList<>();
 
-        VarTable defTable = new VarTable();
 
-        TranslateBlock blockTranslator = new TranslateBlock(defTable);
 
         for (int i=0; i < base.startdef().size(); i++) {
-            BlocksTable bt = singleDefinitionTable(base.startdef(i));
+            // Do not compile _ definitions
+            if (base.startdef().get(i).def_name().getText().equals("_")) continue;
+
+            TranslateDefinition translator = new TranslateDefinition();
+            BlocksTable bt = translator.singleDefinitionTable(base.startdef(i));
+
+            TranslateBlock blockTranslator = new TranslateBlock(translator.varTable);
             bt.extend(blockTranslator.translateBlock(base.block(i)));
             tableList.add(bt);
         }
@@ -25,7 +29,13 @@ public class TranslateDefinition {
         return tableList;
     }
 
-    public static BlocksTable singleDefinitionTable(CarbonDFParser.StartdefContext context) throws BaseCarbonException {
+    private final VarTable varTable;
+
+    public TranslateDefinition(){
+        this.varTable = new VarTable();
+    }
+
+    public BlocksTable singleDefinitionTable(CarbonDFParser.StartdefContext context) throws BaseCarbonException {
         BlocksTable table = new BlocksTable();
         CodeBlock newBlock;
 
@@ -64,7 +74,7 @@ public class TranslateDefinition {
 
     }
 
-    public static ArgsTable functionParams(CarbonDFParser.StartdefContext functionContext, boolean isHidden){
+    public ArgsTable functionParams(CarbonDFParser.StartdefContext functionContext, boolean isHidden){
 
         ArgsTable args = new ArgsTable();
         args.set(25, new CodeArg(ArgType.HINT).putData("id", "function"));
@@ -89,6 +99,7 @@ public class TranslateDefinition {
 
 
             args.addAtFirstNull(new FunctionParam(paramContext.SAFE_TEXT().getText(), type));
+            this.varTable.putVar(paramContext.SAFE_TEXT().getText(), VarScope.LINE);
         }
 
         return args;

@@ -1,5 +1,4 @@
-fun HelloThere(param1: any){
-  sendMessage("Hello world!");
-  default.sendMessage(6.9);
-  selection.sendMessage(420);
+fun HelloThere(){
+    sendMessage("HelloWorld");
+    default.sendMessage('Wassup');
 }

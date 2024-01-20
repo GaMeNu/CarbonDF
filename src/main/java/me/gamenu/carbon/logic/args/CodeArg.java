@@ -21,6 +21,9 @@ public class CodeArg implements toJSONObject {
         return data.get(key);
     }
 
+    public ArgType getType() {
+        return type;
+    }
 
     @Override
     public JSONObject toJSON() {
