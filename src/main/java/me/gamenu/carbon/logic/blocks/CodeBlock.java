@@ -56,7 +56,15 @@ public class CodeBlock implements toJSONObject {
         return block;
     }
 
+    public void setBlockType(BlockType blockType) {
+        this.blockType = blockType;
+    }
 
+    public void setActionType(ActionType actionType) {
+        this.actionType = actionType;
+    }
 
-
+    public void setTargetType(TargetType targetType) {
+        this.targetType = targetType;
+    }
 }

@@ -12,15 +12,6 @@ COMMENT_SINGLE_LINE_OPEN: '//' -> mode(CommentMode);
 COMMENT_MULTI_LINE_OPEN: '/*';
 COMMENT_MULTI_LINE_CLOSE: '*/';
 
-TA_ANY: 'any';
-TA_STRING: 'str';
-TA_ST: 'txt';
-TA_NUM: 'num';
-TA_LOC: 'loc';
-TA_VECT: 'vct' | 'vect';
-TA_LIST: 'list';
-TA_DICT: 'dict';
-
 SCOPE_SAVED: 'saved';
 SCOPE_GLOBAL: 'global';
 SCOPE_LOCAL: 'local';

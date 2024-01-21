@@ -49,6 +49,14 @@ public class VarTable {
         return (varMap.get(name) != null);
     }
 
+    public void clearLineScope(){
+        varMap.entrySet().removeIf(entry -> entry.getValue().scope() == VarScope.LINE);
+    }
+
+    public void clearLocalScope(){
+        varMap.entrySet().removeIf(entry -> entry.getValue().scope() == VarScope.LOCAL);
+    }
+
     public VarTable extend(VarTable other){
         this.varMap.putAll(other.varMap);
         return this;

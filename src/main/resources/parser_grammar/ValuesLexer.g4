@@ -21,6 +21,7 @@ TA_LOC: 'loc';
 TA_VECT: 'vct' | 'vect';
 TA_LIST: 'list';
 TA_DICT: 'dict';
+TA_VAR: 'var';
 
 NUMBER: ('-' | '+')? DIGIT_SEQ ('.' DIGIT_SEQ)?;
 

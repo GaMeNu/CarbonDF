@@ -7,6 +7,8 @@ public enum BlockType implements CarbonTypeEnum {
     PROCESS("process", "proc"),
     EVENT_PLAYER("event", "event"),
     EVENT_ENTITY("entity_event", "event"),
+    CALL_FUNC("call_func", "CallFunction"),
+    START_PROCESS("start_process", "StartProcess"),
     PLAYER_ACTION("player_action", "PlayerAction"),
     SET_VARIABLE("set_var", "SetVariable")
     ;

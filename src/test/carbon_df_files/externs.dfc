@@ -1,0 +1,23 @@
+/***********************
+ * CarbonDF Demo #4 :D *
+ ***********************/
+
+extern proc hewwo();
+
+fun main(x: var){
+    // Simple var assign
+    global c = 20;
+
+    // Process call (defined as external)
+    hewwo();
+
+    // Function call, mixed in with var assignment
+    x = im_bored(2, c);
+}
+
+fun im_bored(ret: var, a: num, b: num) {
+    // A few var operations
+    a = mult(a, b);
+    b = add(b, 2);
+    ret = div(a, b);
+}

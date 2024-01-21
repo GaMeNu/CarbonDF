@@ -1,10 +1,7 @@
 package me.gamenu.carbon.logic.compile;
 
 import me.gamenu.carbon.logic.args.*;
-import me.gamenu.carbon.logic.blocks.ActionType;
-import me.gamenu.carbon.logic.blocks.BlockType;
-import me.gamenu.carbon.logic.blocks.BlocksTable;
-import me.gamenu.carbon.logic.blocks.CodeBlock;
+import me.gamenu.carbon.logic.blocks.*;
 import me.gamenu.carbon.logic.etc.TargetType;
 import me.gamenu.carbon.logic.exceptions.*;
 import me.gamenu.carbon.parser.CarbonDFParser.*;
@@ -15,11 +12,14 @@ import java.util.HashMap;
 import static me.gamenu.carbon.parser.CarbonDFLexer.*;
 
 public class TranslateBlock {
-    private final VarTable table;
+    final VarTable table;
+    final HashMap<String, BlockType> funTable;
 
-    public TranslateBlock(VarTable table){
+    public TranslateBlock(VarTable table, HashMap<String, BlockType> funTable){
         this.table = table;
+        this.funTable = funTable;
     }
+
     public BlocksTable translateBlock(BlockContext blockContext) throws BaseCarbonException {
         BlocksTable codeBlockList = new BlocksTable();
         for (Single_lineContext lineContext: blockContext.single_line()) {
@@ -61,13 +61,7 @@ public class TranslateBlock {
                 varDefineContext.var_assign().var_assign_unit()) {
             varName = assignUnitCtx.var_name().getText();
             if (assignUnitCtx.type_annotations() == null) type = ArgType.ANY;
-            else switch (((TerminalNode) assignUnitCtx.type_annotations().getChild(0)).getSymbol().getType()){
-                case TA_ANY -> type = ArgType.ANY;
-                case TA_NUM -> type = ArgType.NUM;
-                case TA_STRING -> type = ArgType.STRING;
-                case TA_ST -> type = ArgType.STYLED_TEXT;
-                default -> type = ArgType.ANY;
-            }
+            else type = TranspileUtils.annotationToArgType(assignUnitCtx.type_annotations());
 
             table.putVar(varName, scope, type);
         }
@@ -103,6 +97,7 @@ public class TranslateBlock {
                 //handle varName
                 if (unitCtx.var_value().var_name() != null) {
                     if (!this.table.varExists(varName)) throw new UnknownSymbolException(varName);
+                    // Var-to-Var
                     varCode = 1;
                     ArgType typeE = this.table.getVarType(unitCtx.var_value().var_name().getText());
                     if (typeN != ArgType.ANY) {
@@ -112,10 +107,12 @@ public class TranslateBlock {
 
                 //handle standaloneItem
                 else if (unitCtx.var_value().standalone_item() != null) {
+                    //Var-to-Standalone
                     varCode = 2;
                     if (getItemType(unitCtx.var_value().standalone_item()) != typeN && typeN != ArgType.ANY)
                         throw new TypeMismatchException(typeN, getItemType(unitCtx.var_value().standalone_item()));
                 } else if(unitCtx.var_value().fun_call() != null) {
+                    // Var-to-Fun
                     varCode = 3;
                 }
                 ActionType actionType;
@@ -128,7 +125,7 @@ public class TranslateBlock {
                     funRes = parseFunCall(unitCtx.var_value().fun_call());
                     actionType = funRes.getActionType();
                 } else {
-                    actionType = ActionType.SIMPLE_ASSIGN;
+                    actionType = ActionType.NULL;
                 }
 
                 CodeBlock cb = new CodeBlock(BlockType.SET_VARIABLE, actionType, null);
@@ -143,6 +140,14 @@ public class TranslateBlock {
                     }
                     cb.args().addAtFirstNull(ca);
                 } else if (varCode == 3) {
+                    if (actionType == null){
+                        String funName = unitCtx.var_value().fun_call().single_fun_call().SAFE_TEXT().getText();
+                        if (funTable.get(funName) == null)
+                            throw new UnknownSymbolException(funName);
+                        DefinitionBlock newBlock = new DefinitionBlock(BlockType.CALL_FUNC, null, funName);
+                        newBlock.setArgs(cb.args());
+                        cb = newBlock;
+                    }
                     cb.args().extend(funRes.args());
                 }
                 bt.add(cb);
@@ -156,7 +161,20 @@ public class TranslateBlock {
         String singleFunCallName = ctx.single_fun_call().SAFE_TEXT().getText();
         ActionType action = ActionType.fromCodeName(singleFunCallName);
         if (action == null){
-            throw new UnrecognizedTokenException(singleFunCallName);
+            if (funTable.get(singleFunCallName) == null)
+                throw new UnrecognizedTokenException(singleFunCallName);
+            else {
+                BlockType type;
+                switch (funTable.get(singleFunCallName)){
+                    case FUNC -> type = BlockType.CALL_FUNC;
+                    case PROCESS -> type = BlockType.START_PROCESS;
+                    default -> type = null;
+                }
+
+                CodeBlock retBlock = new DefinitionBlock(type, null, singleFunCallName);
+                retBlock.setArgs(funCallParams(ctx.single_fun_call().call_params()));
+                return retBlock;
+            }
         }
 
         TargetType targetType = null;
@@ -182,8 +200,10 @@ public class TranslateBlock {
     public ArgsTable funCallParams(Call_paramsContext ctx) throws BaseCarbonException {
         ArgsTable args = new ArgsTable();
         CodeArg arg;
-        for (Call_paramContext param: ctx.call_param()){
 
+        if (ctx == null) return args;
+
+        for (Call_paramContext param: ctx.call_param()){
             if (param.var_name() != null) {
                 args.addAtFirstNull(varArg(param));
             } else if (param.standalone_item() != null) {

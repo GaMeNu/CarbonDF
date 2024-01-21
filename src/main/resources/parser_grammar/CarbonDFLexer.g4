@@ -15,3 +15,5 @@ EVENTDEF_KEYWORD: 'event';
 
 MOD_VISIBLE: 'shown';
 MOD_INVISIBLE: 'hidden';
+
+MOD_EXTERN: 'extern';

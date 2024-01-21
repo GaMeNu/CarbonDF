@@ -58,6 +58,6 @@ styled_text
 : STRING_LITERAL_SIMPLE_2
 ;
 
-type_annotations: (TA_ANY | TA_STRING | TA_ST | TA_NUM | TA_LOC | TA_VECT | TA_LIST | TA_DICT);
+type_annotations: (TA_ANY | TA_STRING | TA_ST | TA_NUM | TA_LOC | TA_VECT | TA_LIST | TA_DICT | TA_VAR);
 
 key: simple_string;

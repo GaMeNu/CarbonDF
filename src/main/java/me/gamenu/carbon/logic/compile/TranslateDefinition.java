@@ -3,36 +3,60 @@ package me.gamenu.carbon.logic.compile;
 import me.gamenu.carbon.logic.args.*;
 import me.gamenu.carbon.logic.blocks.*;
 import me.gamenu.carbon.logic.exceptions.BaseCarbonException;
+import me.gamenu.carbon.logic.exceptions.CarbonException;
+import me.gamenu.carbon.logic.exceptions.UnknownSymbolException;
 import me.gamenu.carbon.logic.exceptions.UnrecognizedTokenException;
 import me.gamenu.carbon.parser.CarbonDFParser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class TranslateDefinition {
+
     public static ArrayList<BlocksTable> translate(CarbonDFParser.BaseContext base) throws BaseCarbonException {
         ArrayList<BlocksTable> tableList = new ArrayList<>();
 
 
+        TranslateDefinition translator = new TranslateDefinition();
 
-        for (int i=0; i < base.startdef().size(); i++) {
+        translator.generateFunTable(base);
+
+        for (int i=0; i < base.single_def().size(); i++) {
             // Do not compile _ definitions
-            if (base.startdef().get(i).def_name().getText().equals("_")) continue;
+            if (base.single_def().get(i).startdef().def_name().getText().equals("_")) continue;
 
-            TranslateDefinition translator = new TranslateDefinition();
-            BlocksTable bt = translator.singleDefinitionTable(base.startdef(i));
+            BlocksTable bt = translator.singleDefinitionTable(base.single_def(i).startdef());
 
-            TranslateBlock blockTranslator = new TranslateBlock(translator.varTable);
-            bt.extend(blockTranslator.translateBlock(base.block(i)));
+            TranslateBlock blockTranslator = new TranslateBlock(translator.varTable, translator.funTable);
+
+            if (base.single_def(i).block() == null) continue;
+
+            bt.extend(blockTranslator.translateBlock(base.single_def(i).block()));
             tableList.add(bt);
+            translator.varTable.clearLineScope();
         }
 
         return tableList;
     }
 
-    private final VarTable varTable;
+    final VarTable varTable;
+    final HashMap<String, BlockType> funTable;
 
     public TranslateDefinition(){
         this.varTable = new VarTable();
+        this.funTable = new HashMap<>();
+    }
+
+    public void generateFunTable(CarbonDFParser.BaseContext base) throws BaseCarbonException {
+        for (CarbonDFParser.Single_defContext def: base.single_def()) {
+            boolean isExtern = getExternModifier(def.startdef());
+            if (!isExtern && def.block() == null) throw new CarbonException("Non-external functions must have a function body");
+            if (def.startdef().def_keyword().FUNDEF_KEYWORD() != null) {
+                funTable.put(def.startdef().def_name().getText(), BlockType.FUNC);
+            } else if (def.startdef().def_keyword().PROCDEF_KEYWORD() != null){
+                funTable.put(def.startdef().def_name().getText(), BlockType.PROCESS);
+            }
+        }
     }
 
     public BlocksTable singleDefinitionTable(CarbonDFParser.StartdefContext context) throws BaseCarbonException {
@@ -60,9 +84,12 @@ public class TranslateDefinition {
     }
 
     private static boolean getVisModifier(CarbonDFParser.StartdefContext context){
-        if (context.def_modifiers() == null) return false;
-        if (context.def_modifiers().vis_modifier() == null) return false;
-        return (context.def_modifiers().vis_modifier().MOD_INVISIBLE() != null);
+        if (context.vis_modifier() == null) return false;
+        return (context.vis_modifier().MOD_INVISIBLE() != null);
+    }
+
+    private static boolean getExternModifier(CarbonDFParser.StartdefContext context){
+        return (context.extern_modifier() != null);
     }
 
     private static BlockTag getHiddenTag(boolean isHidden){
@@ -74,7 +101,7 @@ public class TranslateDefinition {
 
     }
 
-    public ArgsTable functionParams(CarbonDFParser.StartdefContext functionContext, boolean isHidden){
+    public ArgsTable functionParams(CarbonDFParser.StartdefContext functionContext, boolean isHidden) throws UnknownSymbolException {
 
         ArgsTable args = new ArgsTable();
         args.set(25, new CodeArg(ArgType.HINT).putData("id", "function"));
@@ -93,9 +120,7 @@ public class TranslateDefinition {
             // Can I PLEASE use switch-case here?
             // WHY ANTLR WHY
             if (typeContext == null) type = ArgType.ANY;
-            else if (typeContext.TA_ANY() != null) type = ArgType.ANY;
-            else if (typeContext.TA_NUM() != null) type = ArgType.NUM;
-            else type = ArgType.ANY;
+            else type = TranspileUtils.annotationToArgType(typeContext);
 
 
             args.addAtFirstNull(new FunctionParam(paramContext.SAFE_TEXT().getText(), type));
