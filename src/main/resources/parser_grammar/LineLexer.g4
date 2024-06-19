@@ -22,12 +22,9 @@ PAR_CLOSE: ')';
 OP_VAR_ASSIGN: '=';
 OP_VAR_INCREMENT: '+=';
 OP_VAR_DECREMENT: '-=';
-OP_ADD: '+';
-OP_SUB: '-';
-OP_MULT: '*';
-OP_DIV: '/';
 LINE_END: ';';
 CALL_CHAIN_DIV: '.';
+CLASS_CALL_DIV: '::';
 SCOPE_OPEN: '<';
 SCOPE_CLOSE: '>';
 

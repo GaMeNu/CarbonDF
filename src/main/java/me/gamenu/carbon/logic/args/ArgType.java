@@ -6,9 +6,13 @@ public enum ArgType implements CarbonTypeEnum {
     ANY("any"),
     PARAM("pn_el"),
     VAR("var"),
+
     STRING("txt"),
     STYLED_TEXT("comp"),
     NUM("num"),
+
+    LIST("list"),
+    DICT("dict"),
 
     HINT("hint"),
     TAG("bl_tag");
@@ -27,5 +31,14 @@ public enum ArgType implements CarbonTypeEnum {
     @Override
     public String getCodeName() {
         return id;
+    }
+
+    public static ArgType fromID(String id){
+        for (ArgType type : values()) {
+            if (type.id.equals(id)) {
+                return type;
+            }
+        }
+        return null;
     }
 }

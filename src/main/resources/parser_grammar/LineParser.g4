@@ -25,13 +25,13 @@ if_statement:
  )?;
 
 
-fun_call: fun_call_chain* single_fun_call ;
+fun_call: fun_call_chain? single_fun_call ;
 
 single_fun_call: SAFE_TEXT '(' call_params? ')';
 
 single_token_call: SAFE_TEXT;
 
-fun_call_chain: ((single_fun_call | single_token_call) '.');
+fun_call_chain: ((single_token_call) CLASS_CALL_DIV);
 
 
 call_params
@@ -43,17 +43,21 @@ call_params
 
 call_param: standalone_item | var_name;
 
-var_define: var_scope WHITESPACES var_assign;
+var_define: var_scope WHITESPACES var_define_unit (ARG_SEP var_define_unit)*;
+
+var_define_unit: var_name (WHITESPACES? ':' WHITESPACES? type_annotations)? (WHITESPACES? OP_VAR_ASSIGN WHITESPACES? var_value)?;
 
 var_assign: var_assign_unit (ARG_SEP var_assign_unit)*;
 
-var_assign_unit: var_name (WHITESPACES? ':' WHITESPACES? type_annotations)? (WHITESPACES? OP_VAR_ASSIGN WHITESPACES? var_value)?;
+var_assign_unit: var_name WHITESPACES? OP_VAR_ASSIGN WHITESPACES? var_value;
 
 var_scope: SCOPE_SAVED | SCOPE_GLOBAL | SCOPE_LOCAL | SCOPE_LINE;
 
 var_name: SAFE_TEXT;
 
 var_value: (var_name | standalone_item | fun_call);
+
+defblock: '{' WHITESPACES? (single_line WHITESPACES?)* '}';
 
 block: '{' WHITESPACES? (single_line WHITESPACES?)* '}';
 

@@ -30,9 +30,8 @@ public enum BlockType implements CarbonTypeEnum {
         return codeName;
     }
 
-    public BlockType getFromCodeName(String codeName){
-        for (BlockType bt :
-                BlockType.values()) {
+    public static BlockType fromCodeName(String codeName){
+        for (BlockType bt : BlockType.values()) {
             if (bt.getCodeName().equals(codeName)) return bt;
         }
 

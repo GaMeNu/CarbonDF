@@ -13,7 +13,7 @@ options {
 
 base: WHITESPACES? ((single_def | comment) WHITESPACES?)*;
 
-single_def: startdef (block | LINE_END);
+single_def: startdef (defblock | LINE_END);
 
 startdef
  : (extern_modifier WHITESPACES)? (vis_modifier WHITESPACES)?
@@ -31,9 +31,11 @@ def_name: SAFE_TEXT;
 def_params: def_param (ARG_SEP def_param)*;
 
 def_param
- : SAFE_TEXT
+ : SAFE_TEXT param_options
    ( WHITESPACES? ':' WHITESPACES?
    type_annotations
    )?
  ;
+
+param_options: PARAM_PLURAL? PARAM_OPTIONAL?;
 

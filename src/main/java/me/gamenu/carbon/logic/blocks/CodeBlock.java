@@ -34,12 +34,13 @@ public class CodeBlock implements toJSONObject {
         return actionType;
     }
 
-    public ArgsTable args() {
+    public ArgsTable getArgs() {
         return args;
     }
 
-    public void setArgs(ArgsTable args) {
+    public CodeBlock setArgs(ArgsTable args) {
         this.args = args;
+        return this;
     }
 
     public JSONObject toJSON(){
@@ -56,15 +57,18 @@ public class CodeBlock implements toJSONObject {
         return block;
     }
 
-    public void setBlockType(BlockType blockType) {
+    public CodeBlock setBlockType(BlockType blockType) {
         this.blockType = blockType;
+        return this;
     }
 
-    public void setActionType(ActionType actionType) {
+    public CodeBlock setActionType(ActionType actionType) {
         this.actionType = actionType;
+        return this;
     }
 
-    public void setTargetType(TargetType targetType) {
+    public CodeBlock setTargetType(TargetType targetType) {
         this.targetType = targetType;
+        return this;
     }
 }

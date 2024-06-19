@@ -12,7 +12,7 @@ any_item: standalone_item | complex_item;
 standalone_item: simple_item;
 
 // very basic items.
-simple_item: NUMBER | string | styled_text;
+simple_item: number | string | styled_text;
 
 // Items that don't exist standalone in DF, and can only live in vars
 complex_item: list | dict;
@@ -57,6 +57,8 @@ simple_string
 styled_text
 : STRING_LITERAL_SIMPLE_2
 ;
+
+number: NUMBER;
 
 type_annotations: (TA_ANY | TA_STRING | TA_ST | TA_NUM | TA_LOC | TA_VECT | TA_LIST | TA_DICT | TA_VAR);
 

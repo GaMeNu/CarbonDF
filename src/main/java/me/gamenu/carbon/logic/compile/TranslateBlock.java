@@ -20,7 +20,7 @@ public class TranslateBlock {
         this.funTable = funTable;
     }
 
-    public BlocksTable translateBlock(BlockContext blockContext) throws BaseCarbonException {
+    public BlocksTable translateBlock(DefblockContext blockContext) throws BaseCarbonException {
         BlocksTable codeBlockList = new BlocksTable();
         for (Single_lineContext lineContext: blockContext.single_line()) {
             // We SKIP Empty lines and comments
@@ -56,9 +56,8 @@ public class TranslateBlock {
             case SCOPE_LINE -> scope = VarScope.LINE;
             default -> scope = VarScope.GLOBAL;
         }
-
-        for (Var_assign_unitContext assignUnitCtx :
-                varDefineContext.var_assign().var_assign_unit()) {
+/*
+        for (Var_assign_unitContext assignUnitCtx : varDefineContext.var_assign().var_assign_unit()) {
             varName = assignUnitCtx.var_name().getText();
             if (assignUnitCtx.type_annotations() == null) type = ArgType.ANY;
             else type = TranspileUtils.annotationToArgType(assignUnitCtx.type_annotations());
@@ -66,17 +65,22 @@ public class TranslateBlock {
             table.putVar(varName, scope, type);
         }
 
+ */
+
         this.table.extend(table);
 
-        return parseVarAssign(varDefineContext.var_assign());
+        // return parseVarAssign(varDefineContext.var_define_unit());
+        return null;
     }
 
     private ArgType getItemType(Standalone_itemContext ctx){
+        /*
         if (ctx.simple_item() != null){
             if (ctx.simple_item().NUMBER() != null) return ArgType.NUM;
             else if (ctx.simple_item().string() != null) return ArgType.STRING;
             else if (ctx.simple_item().styled_text() != null) return ArgType.STYLED_TEXT;
         }
+         */
         return null;
     }
 
@@ -129,26 +133,26 @@ public class TranslateBlock {
                 }
 
                 CodeBlock cb = new CodeBlock(BlockType.SET_VARIABLE, actionType, null);
-                cb.args().addAtFirstNull(new VarArg(varName, this.table.getVarScope(varName)));
+                cb.getArgs().addAtFirstNull(new VarArg(varName, this.table.getVarScope(varName)));
                 if (varCode == 1) {
-                    cb.args().addAtFirstNull(new VarArg(unitCtx.var_value().var_name().getText(), this.table.getVarScope(unitCtx.var_value().var_name().getText())));
+                    cb.getArgs().addAtFirstNull(new VarArg(unitCtx.var_value().var_name().getText(), this.table.getVarScope(unitCtx.var_value().var_name().getText())));
                 } else if (varCode == 2) {
                     CodeArg ca = new CodeArg(getItemType(unitCtx.var_value().standalone_item()));
                     switch (ca.getType()) {
                         case NUM -> ca.putData("name", unitCtx.var_value().getText());
                         case STRING, STYLED_TEXT -> ca.putData("name", trimStringContexts(unitCtx.var_value().getText()));
                     }
-                    cb.args().addAtFirstNull(ca);
+                    cb.getArgs().addAtFirstNull(ca);
                 } else if (varCode == 3) {
                     if (actionType == null){
                         String funName = unitCtx.var_value().fun_call().single_fun_call().SAFE_TEXT().getText();
                         if (funTable.get(funName) == null)
                             throw new UnknownSymbolException(funName);
                         DefinitionBlock newBlock = new DefinitionBlock(BlockType.CALL_FUNC, null, funName);
-                        newBlock.setArgs(cb.args());
+                        newBlock.setArgs(cb.getArgs());
                         cb = newBlock;
                     }
-                    cb.args().extend(funRes.args());
+                    cb.getArgs().extend(funRes.getArgs());
                 }
                 bt.add(cb);
             }
@@ -178,9 +182,8 @@ public class TranslateBlock {
         }
 
         TargetType targetType = null;
-
+/*
         if (ctx.fun_call_chain() != null && !ctx.fun_call_chain().isEmpty()){
-            // TODO properly handle this
             if (ctx.fun_call_chain().size() > 1) throw new CarbonException("You cannot currently chain more than 1 call right now!");
             if (ctx.fun_call_chain().get(0).single_token_call() == null) throw new CarbonException("You cannot currently chain function calls!");
             Single_token_callContext tokenCtx = ctx.fun_call_chain(0).single_token_call();
@@ -190,7 +193,7 @@ public class TranslateBlock {
             }
         }
 
-
+*/
 
         CodeBlock retBlock = new CodeBlock(action.getBlock(), action, targetType);
         if(ctx.single_fun_call().call_params() != null) retBlock.setArgs(funCallParams(ctx.single_fun_call().call_params()));
@@ -253,8 +256,8 @@ public class TranslateBlock {
                 return new CodeArg(ArgType.STYLED_TEXT)
                         .putData("name", trimStringContexts(itemCtx.string().getText()));
         }
-        if (itemCtx.NUMBER() != null) {
-            return new CodeArg(ArgType.NUM).putData("name", itemCtx.NUMBER().getText());
+        if (itemCtx.number() != null) {
+            return new CodeArg(ArgType.NUM).putData("name", itemCtx.number().getText());
         }
 
 

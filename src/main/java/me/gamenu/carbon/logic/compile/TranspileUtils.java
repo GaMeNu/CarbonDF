@@ -18,4 +18,24 @@ public class TranspileUtils {
             default -> throw new UnknownSymbolException(ctx.getText());
         };
     }
+
+    public static ArgType anyItemToArgType(CarbonDFParser.Any_itemContext ctx){
+        if (ctx.standalone_item() != null) return standaloneToArgType(ctx.standalone_item());
+        else if (ctx.complex_item() != null) return complexToArgType(ctx.complex_item());
+        return null;
+    }
+
+    public static ArgType standaloneToArgType(CarbonDFParser.Standalone_itemContext ctx){
+        if (ctx.simple_item().number() != null) return ArgType.NUM;
+        if (ctx.simple_item().string() != null) return ArgType.STRING;
+        if (ctx.simple_item().styled_text() != null) return ArgType.STYLED_TEXT;
+        return null;
+    }
+
+    public static ArgType complexToArgType(CarbonDFParser.Complex_itemContext ctx){
+        if (ctx.list() != null) return ArgType.LIST;
+        if (ctx.dict() != null) return ArgType.DICT;
+        return null;
+    }
+
 }

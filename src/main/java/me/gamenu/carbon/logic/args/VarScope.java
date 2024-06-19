@@ -16,9 +16,15 @@ public enum VarScope implements CarbonTypeEnum {
         this.codeName = codeName;
     }
     public static VarScope fromID(String id){
-        for (VarScope scope :
-                VarScope.values()) {
+        for (VarScope scope : VarScope.values()) {
             if (scope.id.equals(id)) return scope;
+        }
+        return null;
+    }
+
+    public static VarScope fromCodeName(String codeName){
+        for (VarScope scope : VarScope.values()) {
+            if (scope.codeName.equals(codeName)) return scope;
         }
         return null;
     }

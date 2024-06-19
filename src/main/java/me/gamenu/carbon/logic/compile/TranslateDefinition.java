@@ -29,9 +29,9 @@ public class TranslateDefinition {
 
             TranslateBlock blockTranslator = new TranslateBlock(translator.varTable, translator.funTable);
 
-            if (base.single_def(i).block() == null) continue;
+            if (base.single_def(i).defblock() == null) continue;
 
-            bt.extend(blockTranslator.translateBlock(base.single_def(i).block()));
+            bt.extend(blockTranslator.translateBlock(base.single_def(i).defblock()));
             tableList.add(bt);
             translator.varTable.clearLineScope();
         }
@@ -50,7 +50,7 @@ public class TranslateDefinition {
     public void generateFunTable(CarbonDFParser.BaseContext base) throws BaseCarbonException {
         for (CarbonDFParser.Single_defContext def: base.single_def()) {
             boolean isExtern = getExternModifier(def.startdef());
-            if (!isExtern && def.block() == null) throw new CarbonException("Non-external functions must have a function body");
+            if (!isExtern && def.defblock() == null) throw new CarbonException("Non-external functions must have a function body");
             if (def.startdef().def_keyword().FUNDEF_KEYWORD() != null) {
                 funTable.put(def.startdef().def_name().getText(), BlockType.FUNC);
             } else if (def.startdef().def_keyword().PROCDEF_KEYWORD() != null){

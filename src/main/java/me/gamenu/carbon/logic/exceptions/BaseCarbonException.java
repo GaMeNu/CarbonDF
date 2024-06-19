@@ -1,6 +1,6 @@
 package me.gamenu.carbon.logic.exceptions;
 
-public abstract class BaseCarbonException extends Exception{
+public abstract class BaseCarbonException extends RuntimeException{
 
     public BaseCarbonException(String message) {
         super(message);

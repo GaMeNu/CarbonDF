@@ -90,6 +90,39 @@ public class ArgsTable implements toJSONObject {
         return argList.get(slot);
     }
 
+    public boolean matchParams(ArgsTable paramsTable) {
+        if (paramsTable.getArgDataList().size() != getArgDataList().size()) return false;
+        for (int i = 0; i < argList.size(); i++) {
+            FunctionParam otherArg = ((FunctionParam) paramsTable.get(i));
+            CodeArg thisArg = get(i);
+            if (!matchSingleParam(thisArg, otherArg)) return false;
+        }
+        return true;
+    }
+
+    private static boolean matchSingleParam(CodeArg thisArg, FunctionParam toMatch) {
+        ArgType thisType = thisArg.getType();
+        ArgType otherType = toMatch.getParamType();
+        // Alright, so:
+        // Check if the types match.
+        if (thisType != otherType) {
+            if (otherType == ArgType.ANY) return true;
+            if (thisType == ArgType.VAR) {
+                ArgType varType = ((VarArg) thisArg).getVarType();
+                return varType == otherType;
+            }
+        }
+        return true;
+    }
+
+    public boolean matchTypes(ArrayList<ArgType> other){
+        if (getArgDataList().size() != other.size()) return false;
+        for (int i = 0; i < other.size(); i++) {
+            if (getArgDataList().get(i).getType() != other.get(i) && other.get(i) != ArgType.ANY) return false;
+        }
+        return true;
+    }
+
     public ArrayList<CodeArg> getArgDataList(){
         return new ArrayList<>(argList);
     }

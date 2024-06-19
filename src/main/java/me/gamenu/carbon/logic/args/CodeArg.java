@@ -17,6 +17,12 @@ public class CodeArg implements toJSONObject {
         return this;
     }
 
+    public CodeArg setArgName(Object value) {
+        data.put("name", value);
+        return this;
+    }
+
+
     public Object getData(String key){
         return data.get(key);
     }

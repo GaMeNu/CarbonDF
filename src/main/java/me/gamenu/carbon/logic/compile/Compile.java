@@ -2,10 +2,12 @@ package me.gamenu.carbon.logic.compile;
 
 import me.gamenu.carbon.logic.blocks.BlocksTable;
 import me.gamenu.carbon.logic.exceptions.BaseCarbonException;
+import me.gamenu.carbon.logic.listeners.ProgramBaseListener;
 import me.gamenu.carbon.parser.CarbonDFLexer;
+import me.gamenu.carbon.parser.CarbonDFParser;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import me.gamenu.carbon.parser.CarbonDFParser;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -63,14 +65,30 @@ public class Compile {
      */
     public static void fromFile(String filepath){
         CarbonDFParser parser = fileToBaseParser(filepath);
-        CarbonDFParser.BaseContext base = parser.base();
+        parser.removeErrorListeners();
+        parser.addErrorListener(ErrorListener.INSTANCE);
+
+        ProgramContext programContext = new ProgramContext().setParser(parser);
+
+        ProgramBaseListener programBaseListener = new ProgramBaseListener(programContext);
+        CarbonDFParser.BaseContext base;
+
         ArrayList<BlocksTable> tableList;
 
         try {
-            tableList = TranslateDefinition.translate(base);
-        } catch (BaseCarbonException e) {
-            throw new RuntimeException(e);
+            base = parser.base();
+            base.enterRule(programBaseListener);
+        } catch (ParseCancellationException e){
+            throw e;
+            // return;
+        } catch (BaseCarbonException e){
+            System.err.println(e.getMessage());
+            return;
         }
+
+        if (ErrorListener.INSTANCE.hasError()) return;
+
+        tableList = programBaseListener.getTableList();
 
         for (BlocksTable table : tableList){
             System.out.println(compiledTable(table));

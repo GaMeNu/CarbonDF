@@ -18,6 +18,10 @@ public class BlocksTable implements toJSONObject {
         return this;
     }
 
+    public ArrayList<CodeBlock> list() {
+        return table;
+    }
+
     public CodeBlock get(int i){
         return table.get(i);
     }
