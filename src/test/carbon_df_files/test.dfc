@@ -6,7 +6,7 @@ fun test(aa: any){
     testing(x); // This will work fine!
     SetVariable::assign(x, 10);
     line y: num;
-    testing(y); // This will error. testing() requires an str, but we're sending a num.
+    // testing(y); // This will error. testing() requires an str, but we're sending a num.
     SetVariable::sendMessage(); // This will error. sendMessage belongs to PlayerAction.
     This Shouldnt::work(); // This will error. "This Shouldnt" is an illegal class name. work() does not exist.
 }

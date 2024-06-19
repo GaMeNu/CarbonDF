@@ -2,6 +2,7 @@ package me.gamenu.carbon.logic.compile;
 
 import me.gamenu.carbon.logic.blocks.BlocksTable;
 import me.gamenu.carbon.logic.exceptions.BaseCarbonException;
+import me.gamenu.carbon.logic.exceptions.ErrorListener;
 import me.gamenu.carbon.logic.listeners.ProgramBaseListener;
 import me.gamenu.carbon.parser.CarbonDFLexer;
 import me.gamenu.carbon.parser.CarbonDFParser;

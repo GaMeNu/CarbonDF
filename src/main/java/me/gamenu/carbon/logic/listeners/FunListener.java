@@ -74,6 +74,9 @@ public class FunListener extends BaseCarbonListener {
 
         blockType = actionType.getBlock();
 
+        if (actionType == ActionType.SIMPLE_ASSIGN)
+            throwError("It is generally recommended to avoid using SetVariable::assign(), as it bypasses strong typing.", ctx, CarbonTranspileException.class, CarbonTranspileException.Severity.WARN);
+
         block = new CodeBlock(blockType, actionType);
     }
 
