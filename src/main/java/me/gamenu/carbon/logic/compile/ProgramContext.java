@@ -11,6 +11,8 @@ public class ProgramContext {
     VarTable varTable;
     BlocksTable currentDefTable;
 
+    FunTable.FunType currentFun;
+
     public ProgramContext(Parser parser, FunTable funTable, VarTable varTable, BlocksTable currentDefTable) {
         this.parser = parser;
         this.funTable = funTable;
@@ -30,6 +32,21 @@ public class ProgramContext {
         this.currentDefTable = currentDefTable;
         return this;
     }
+
+    public FunTable.FunType getCurrentFun() {
+        return currentFun;
+    }
+
+    public ProgramContext setCurrentFunFromName(String name){
+        this.currentFun = funTable.get(name);
+        return this;
+    }
+
+    public ProgramContext setCurrentFun(FunTable.FunType currentFun) {
+        this.currentFun = currentFun;
+        return this;
+    }
+
 
     public Parser getParser() {
         return parser;

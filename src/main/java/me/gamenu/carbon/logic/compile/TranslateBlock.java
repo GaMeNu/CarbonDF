@@ -89,8 +89,8 @@ public class TranslateBlock {
     }
 
     private BlocksTable parseVarAssign(Var_assignContext ctx) throws BaseCarbonException{
-
         BlocksTable bt = new BlocksTable();
+        /*
         for (Var_assign_unitContext unitCtx : ctx.var_assign_unit()){
             if (!this.table.varExists(unitCtx.var_name().getText())) throw new UnknownSymbolException(unitCtx.var_name().getText());
             String varName = unitCtx.var_name().getText();
@@ -133,9 +133,9 @@ public class TranslateBlock {
                 }
 
                 CodeBlock cb = new CodeBlock(BlockType.SET_VARIABLE, actionType, null);
-                cb.getArgs().addAtFirstNull(new VarArg(varName, this.table.getVarScope(varName)));
+                // cb.getArgs().addAtFirstNull(new VarArg(varName, this.table.getVarScope(varName), this.table.));
                 if (varCode == 1) {
-                    cb.getArgs().addAtFirstNull(new VarArg(unitCtx.var_value().var_name().getText(), this.table.getVarScope(unitCtx.var_value().var_name().getText())));
+                    // cb.getArgs().addAtFirstNull(new VarArg(unitCtx.var_value().var_name().getText(), this.table.getVarScope(unitCtx.var_value().var_name().getText())));
                 } else if (varCode == 2) {
                     CodeArg ca = new CodeArg(getItemType(unitCtx.var_value().standalone_item()));
                     switch (ca.getType()) {
@@ -159,6 +159,8 @@ public class TranslateBlock {
 
         }
         return bt;
+         */
+        return null;
     }
 
     public CodeBlock parseFunCall(Fun_callContext ctx) throws BaseCarbonException {
@@ -217,7 +219,7 @@ public class TranslateBlock {
     }
 
     private CodeArg newVarArg(String name, VarScope scope){
-        return new VarArg(name, scope);
+        return new VarArg(name, scope, false);
     }
 
     private CodeArg varArg(Call_paramContext ctx) throws UnknownSymbolException {
@@ -248,13 +250,13 @@ public class TranslateBlock {
         if (ctx.standalone_item().simple_item() == null) return null;
         Simple_itemContext itemCtx = ctx.standalone_item().simple_item();
 
-        if (itemCtx.string() != null) {
-            if (itemCtx.string().simple_string() != null)
+        if (itemCtx.simple_string() != null) {
+            if (itemCtx.simple_string() != null)
                 return new CodeArg(ArgType.STRING)
-                    .putData("name", trimStringContexts(itemCtx.string().getText()));
-            else if (itemCtx.string().styled_text() != null)
+                    .putData("name", trimStringContexts(itemCtx.simple_string().getText()));
+            else if (itemCtx.styled_text() != null)
                 return new CodeArg(ArgType.STYLED_TEXT)
-                        .putData("name", trimStringContexts(itemCtx.string().getText()));
+                        .putData("name", trimStringContexts(itemCtx.simple_string().getText()));
         }
         if (itemCtx.number() != null) {
             return new CodeArg(ArgType.NUM).putData("name", itemCtx.number().getText());

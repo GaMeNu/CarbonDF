@@ -123,8 +123,8 @@ public class TranslateDefinition {
             else type = TranspileUtils.annotationToArgType(typeContext);
 
 
-            args.addAtFirstNull(new FunctionParam(paramContext.SAFE_TEXT().getText(), type));
-            this.varTable.putVar(paramContext.SAFE_TEXT().getText(), VarScope.LINE);
+            // args.addAtFirstNull(new FunctionParam(paramContext.SAFE_TEXT().getText(), type));
+            // this.varTable.putVar(paramContext.SAFE_TEXT().getText(), VarScope.LINE);
         }
 
         return args;

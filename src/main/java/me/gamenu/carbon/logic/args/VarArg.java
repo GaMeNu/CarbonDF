@@ -4,25 +4,50 @@ import org.json.JSONObject;
 
 public class VarArg extends CodeArg{
 
-    ArgType varType;
     String name;
     VarScope scope;
 
-    public VarArg(String name, VarScope scope) {
+    ArgType varType;
+    boolean isDynamic;
+
+    CodeArg value;
+
+    public VarArg(String name, VarScope scope, boolean isDynamic) {
         super(ArgType.VAR);
         this.name = name;
         this.scope = scope;
         this.varType = ArgType.ANY;
+        this.isDynamic = isDynamic;
+        this.value = null;
     }
 
-    public VarArg(String name, VarScope scope, ArgType varType) {
+    public VarArg(VarArg other){
+        super(ArgType.VAR);
+        this.name = other.name;
+        this.scope = other.scope;
+        this.varType = other.varType;
+        this.isDynamic = other.isDynamic;
+        this.value = other.value;
+    }
+
+    public VarArg(String name, VarScope scope, boolean isDynamic, ArgType varType) {
         super(ArgType.VAR);
         this.name = name;
         this.scope = scope;
         this.varType = varType;
+        this.isDynamic = isDynamic;
+        this.value = null;
     }
 
 
+    public VarArg setValue(CodeArg value) {
+        this.value = value;
+        return this;
+    }
+
+    public CodeArg getValue() {
+        return value;
+    }
 
     public String getName() {
         return name;
@@ -39,6 +64,10 @@ public class VarArg extends CodeArg{
     public VarArg setVarType(ArgType varType) {
         this.varType = varType;
         return this;
+    }
+
+    public boolean isDynamic() {
+        return isDynamic;
     }
 
     public VarArg setName(String name) {

@@ -14,14 +14,16 @@ public class FunTable implements Map<String, FunTable.FunType> {
         BlockType type;
         boolean hidden;
         ArgsTable params;
+        ArgsTable returns;
 
         public FunType(){}
 
-        public FunType(String name, BlockType type, boolean hidden, ArgsTable params) {
+        public FunType(String name, BlockType type, boolean hidden, ArgsTable params, ArgsTable returns) {
             this.name = name;
             this.type = type;
             this.hidden = hidden;
             this.params = params;
+            this.returns = returns;
         }
 
 
@@ -59,6 +61,15 @@ public class FunTable implements Map<String, FunTable.FunType> {
 
         public FunType setParams(ArgsTable params) {
             this.params = params;
+            return this;
+        }
+
+        public ArgsTable getReturns() {
+            return returns;
+        }
+
+        public FunType setReturns(ArgsTable returns) {
+            this.returns = returns;
             return this;
         }
     }

@@ -10,7 +10,8 @@ public enum BlockType implements CarbonTypeEnum {
     CALL_FUNC("call_func", "CallFunction"),
     START_PROCESS("start_process", "StartProcess"),
     PLAYER_ACTION("player_action", "PlayerAction"),
-    SET_VARIABLE("set_var", "SetVariable")
+    SET_VARIABLE("set_var", "SetVariable"),
+    CONTROL("control", "Control")
     ;
 
     private final String id;

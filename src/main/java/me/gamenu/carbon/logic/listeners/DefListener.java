@@ -27,6 +27,8 @@ public class DefListener extends BaseCarbonListener {
 
     VarTable varTable;
 
+    ArgsTable paramOutputBuffer;
+
     public DefListener(ProgramContext programContext) {
         super(programContext);
         this.varTable = programContext.getVarTable();
@@ -42,6 +44,7 @@ public class DefListener extends BaseCarbonListener {
         defTable = new BlocksTable();
 
         programContext.setCurrentDefTable(defTable);
+        programContext.setCurrentFunFromName(ctx.startdef().def_name().getText());
 
         enterStartdef(ctx.startdef());
 
@@ -92,13 +95,12 @@ public class DefListener extends BaseCarbonListener {
         }
 
         enterDef_params(ctx.def_params());
+        if (ctx.ret_params() != null) enterRet_params(ctx.ret_params());
 
         if (isExtern)
             if (defBlock.getBlockType() != BlockType.FUNC && defBlock.getBlockType() != BlockType.PROCESS){
                 throwError("Only functions and processes may be marked as external.", ctx, CarbonTranspileException.class);
             }
-
-
 
         if (!defBlock.getArgs().getArgDataList().isEmpty() && defBlock.getBlockType() != BlockType.FUNC){
             throwError("Only Function definitions may contain parameters", ctx, CarbonTranspileException.class);
@@ -106,6 +108,7 @@ public class DefListener extends BaseCarbonListener {
 
         // We only do this here because otherwise we fail the check above.
         // Great design choice, I know.
+        // I agree. -Eztyl
         if (defBlock.getBlockType() == BlockType.FUNC) placeFunctionParams();
         else if (defBlock.getBlockType() == BlockType.PROCESS) placeProcessParams();
     }
@@ -121,9 +124,51 @@ public class DefListener extends BaseCarbonListener {
         super.enterDef_params(ctx);
         if (ctx ==  null) return;
 
+        paramOutputBuffer = new ArgsTable();
         for (Def_paramContext paramCtx: ctx.def_param()){
             enterDef_param(paramCtx);
         }
+
+        for (CodeArg arg : paramOutputBuffer.getArgDataList()) {
+            FunctionParam newParam = (FunctionParam) arg;
+            varTable.putVar(
+                    new VarArg(newParam.getName(), VarScope.LINE, false, newParam.getParamType())
+                            .setValue(new CodeArg(newParam.getParamType()))
+            );
+        }
+
+        defBlock.getArgs().extend(paramOutputBuffer);
+
+
+    }
+
+    @Override
+    public void enterRet_params(Ret_paramsContext ctx) {
+        super.enterRet_params(ctx);
+        if (ctx == null) return;
+        if (defBlock.getBlockType() != BlockType.FUNC) throwError("Only function definitions may contain parameters", ctx, CarbonTranspileException.class);
+
+        paramOutputBuffer = new ArgsTable();
+        for (Def_paramContext defCtx : ctx.def_param()){
+            enterDef_param(defCtx);
+        }
+
+        FunctionParam newPar;
+
+        for (int i = 0; i < paramOutputBuffer.getArgDataList().size(); i++){
+            FunctionParam currentParam = (FunctionParam) paramOutputBuffer.get(i);
+            newPar = new FunctionParam(currentParam.getName(),
+                    new VarArg(currentParam.getName(), VarScope.LINE, false, currentParam.getParamType())
+            );
+
+            defBlock.getArgs().add(i, newPar);
+
+            VarArg curVar = new VarArg(currentParam.getName(), VarScope.LINE, false, currentParam.getParamType());
+
+
+            varTable.putVar(curVar);
+        }
+
     }
 
     @Override
@@ -132,16 +177,18 @@ public class DefListener extends BaseCarbonListener {
 
         FunctionParam newParam;
         if (ctx.type_annotations() != null)
-            newParam = new FunctionParam(ctx.SAFE_TEXT().getText(), TranspileUtils.annotationToArgType(ctx.type_annotations()));
+            newParam = new FunctionParam(ctx.SAFE_TEXT().getText(), new CodeArg(TranspileUtils.annotationToArgType(ctx.type_annotations())));
         else
-            newParam = new FunctionParam(ctx.SAFE_TEXT().getText(), ArgType.ANY);
-        defBlock.getArgs().addAtFirstNull(newParam);
-        varTable.putVar(newParam.getName(), VarScope.LINE, newParam.getParamType());
+            newParam = new FunctionParam(ctx.SAFE_TEXT().getText(), new CodeArg(ArgType.ANY));
+
+        if (newParam.getParamType() == ArgType.VAR) throwError("Variable Parameters are not allowed within function arguments. Please write them as return arguments instead.", ctx, CarbonTranspileException.class);
+        if (varTable.varExists(newParam.getName())) throwError("Variable \"" + newParam.getName() + "\" was redefined", ctx, CarbonTranspileException.class);
+
+        paramOutputBuffer.addAtFirstNull(newParam);
     }
 
     private void placeFunctionParams(){
         defBlock.getArgs().set(25, new CodeArg(ArgType.HINT).putData("id", "function"));
-
         defBlock.getArgs().set(26, getHiddenTag());
     }
 

@@ -1,16 +1,15 @@
-
-fun test(aa: any){
-    testing("wow");
-
-    line x: str = "Wow";
-    testing(x); // This will work fine!
-    SetVariable::assign(x, 10);
-    line y: num;
-    // testing(y); // This will error. testing() requires an str, but we're sending a num.
-    SetVariable::sendMessage(); // This will error. sendMessage belongs to PlayerAction.
-    This Shouldnt::work(); // This will error. "This Shouldnt" is an illegal class name. work() does not exist.
+fun ret_test(input: num, input2: str) -> (res: num, res2: str){
+    line wawa = mult(input, input2);
+    return(wawa, "1");
 }
 
-fun testing(test: str){
-    PlayerAction::sendMessage(test);
+fun main(){
+    line val = 1;
+    _, _ = ret_test(val, "1");
 }
+
+/**
+ * SetVariable::assign(res, test) // res = test;
+ * SetVariable::assign(res2, "Hello world!")
+ * Control::return();
+ */

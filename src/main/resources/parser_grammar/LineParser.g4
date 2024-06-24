@@ -43,13 +43,21 @@ call_params
 
 call_param: standalone_item | var_name;
 
-var_define: var_scope WHITESPACES var_define_unit (ARG_SEP var_define_unit)*;
+var_define: var_scope WHITESPACES
+            var_define_name (WHITESPACES? ARG_SEP WHITESPACES? var_define_name)*
+            (
+              WHITESPACES OP_VAR_ASSIGN WHITESPACES?
+              var_value (WHITESPACES? ARG_SEP WHITESPACES? var_value)*
+            )?
+          ;
 
-var_define_unit: var_name (WHITESPACES? ':' WHITESPACES? type_annotations)? (WHITESPACES? OP_VAR_ASSIGN WHITESPACES? var_value)?;
+var_define_name: var_name (WHITESPACES? ':' WHITESPACES? type_annotations)?;
 
-var_assign: var_assign_unit (ARG_SEP var_assign_unit)*;
-
-var_assign_unit: var_name WHITESPACES? OP_VAR_ASSIGN WHITESPACES? var_value;
+var_assign:
+            var_name (WHITESPACES? ARG_SEP var_name)*
+            WHITESPACES OP_VAR_ASSIGN WHITESPACES
+            var_value (WHITESPACES? ARG_SEP var_value WHITESPACES?)*
+          ;
 
 var_scope: SCOPE_SAVED | SCOPE_GLOBAL | SCOPE_LOCAL | SCOPE_LINE;
 

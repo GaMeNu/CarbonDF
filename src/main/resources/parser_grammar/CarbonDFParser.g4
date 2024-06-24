@@ -18,7 +18,7 @@ single_def: startdef (defblock | LINE_END);
 startdef
  : (extern_modifier WHITESPACES)? (vis_modifier WHITESPACES)?
  def_keyword WHITESPACES def_name WHITESPACES?
- '(' WHITESPACES? def_params? WHITESPACES? ')' WHITESPACES?;
+ '(' WHITESPACES? def_params? WHITESPACES? ')' WHITESPACES? (RETURN_ARROW WHITESPACES? '(' ret_params? ')' WHITESPACES?)?;
 
 vis_modifier: MOD_VISIBLE | MOD_INVISIBLE;
 
@@ -29,6 +29,8 @@ def_keyword: (FUNDEF_KEYWORD | PROCDEF_KEYWORD | EVENTDEF_KEYWORD);
 def_name: SAFE_TEXT;
 
 def_params: def_param (ARG_SEP def_param)*;
+
+ret_params: def_param (ARG_SEP def_param)*;
 
 def_param
  : SAFE_TEXT param_options

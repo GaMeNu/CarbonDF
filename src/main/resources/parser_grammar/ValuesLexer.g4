@@ -18,7 +18,7 @@ TA_STRING: 'str';
 TA_ST: 'stxt';
 TA_NUM: 'num';
 TA_LOC: 'loc';
-TA_VECT: 'vct' | 'vect';
+TA_VECT: 'vect';
 TA_LIST: 'list';
 TA_DICT: 'dict';
 TA_VAR: 'var';

@@ -5,16 +5,18 @@ import org.json.JSONObject;
 public class FunctionParam extends CodeArg{
 
     String name;
-    ArgType paramType;
+
+    CodeArg internalArg;
+
     boolean plural;
     boolean optional;
 
 
-    public FunctionParam(String name, ArgType type){
+    public FunctionParam(String name, CodeArg arg){
         super(ArgType.PARAM);
 
         this.name = name;
-        this.paramType = type;
+        this.internalArg = arg;
         this.plural = false;
         this.optional = false;
     }
@@ -29,12 +31,11 @@ public class FunctionParam extends CodeArg{
     }
 
     public ArgType getParamType() {
-        return paramType;
+        return internalArg.getType();
     }
 
-    public FunctionParam setParamType(ArgType paramType) {
-        this.paramType = paramType;
-        return this;
+    public CodeArg getInternalArg() {
+        return internalArg;
     }
 
     public boolean isPlural() {
@@ -60,7 +61,7 @@ public class FunctionParam extends CodeArg{
         JSONObject res = super.toJSON();
         res.getJSONObject("data")
                 .put("name", name)
-                .put("type", paramType.getID())
+                .put("type", internalArg.getType().getID())
                 .put("plural", plural)
                 .put("optional", optional);
         return res;

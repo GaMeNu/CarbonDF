@@ -1,5 +1,7 @@
 package me.gamenu.carbon.logic.listeners;
 
+import me.gamenu.carbon.logic.args.VarArg;
+import me.gamenu.carbon.logic.args.VarScope;
 import me.gamenu.carbon.logic.blocks.BlocksTable;
 import me.gamenu.carbon.logic.args.FunTable;
 import me.gamenu.carbon.logic.compile.ProgramContext;
@@ -32,6 +34,7 @@ public class ProgramBaseListener extends BaseCarbonListener {
         // Initialize vars
         DefListener defListener;
         VarTable sharedTable = new VarTable();
+        sharedTable.putVar(new VarArg("_", VarScope.LOCAL, true));
         programContext.setVarTable(sharedTable);
 
         // Generate references for defs, non-line vars
