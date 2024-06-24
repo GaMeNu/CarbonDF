@@ -43,7 +43,8 @@ public class ParamListener extends BaseCarbonListener {
     public void enterVar_name(CarbonDFParser.Var_nameContext ctx) {
         super.enterVar_name(ctx);
         if (!varTable.varExists(ctx.getText())) throwError("Could not identify variable \"" + ctx.getText() + "\". Is it defined?", ctx, InvalidNameException.class);
-        codeArg = new VarArg(ctx.getText(), varTable.getVarScope(ctx.getText()), varTable.getVarType(ctx.getText()));
+        codeArg = new VarArg(ctx.getText(), varTable.getVarScope(ctx.getText()), varTable.get(ctx.getText()).isDynamic(), varTable.getVarType(ctx.getText()));
+
     }
 
     @Override
@@ -54,14 +55,14 @@ public class ParamListener extends BaseCarbonListener {
             codeArg = new CodeArg(ArgType.NUM).setArgName(simpleCtx.number().getText());
             return;
         }
-        if (simpleCtx.string() != null) {
-            String stringString = simpleCtx.string().simple_string().getText();
+        if (simpleCtx.simple_string() != null) {
+            String stringString = simpleCtx.simple_string().getText();
             codeArg = new CodeArg(ArgType.STRING).setArgName(stringString.substring(1, stringString.length() - 1));
             return;
         }
         if (simpleCtx.styled_text() != null){
             String stringString = simpleCtx.styled_text().getText();
-            codeArg = new CodeArg(ArgType.STRING).setArgName(stringString.substring(1, stringString.length()-1));
+            codeArg = new CodeArg(ArgType.STYLED_TEXT).setArgName(stringString.substring(1, stringString.length()-1));
         }
     }
 }

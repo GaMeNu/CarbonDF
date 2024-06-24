@@ -67,7 +67,7 @@ public class Compile {
     public static void fromFile(String filepath){
         CarbonDFParser parser = fileToBaseParser(filepath);
         parser.removeErrorListeners();
-        parser.addErrorListener(ErrorListener.INSTANCE);
+        parser.addErrorListener(ErrorListener.INSTANCE.setPrintStackTrace(true));
 
         ProgramContext programContext = new ProgramContext().setParser(parser);
 
@@ -80,8 +80,8 @@ public class Compile {
             base = parser.base();
             base.enterRule(programBaseListener);
         } catch (ParseCancellationException e){
-            throw e;
-            // return;
+            System.err.println("Transpiling process cancelled due to previous error.");
+            return;
         } catch (BaseCarbonException e){
             System.err.println(e.getMessage());
             return;

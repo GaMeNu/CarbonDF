@@ -19,8 +19,8 @@ public class VarTable implements Map<String, VarArg> {
      * @param scope VarScope
      * @return this
      */
-    public VarTable putVar(String name, VarScope scope) {
-        varMap.put(name, new VarArg(name, scope, ArgType.ANY));
+    public VarTable putVar(String name, VarScope scope, boolean isDynamic) {
+        varMap.put(name, new VarArg(name, scope, isDynamic, ArgType.ANY));
         return this;
     }
 
@@ -42,9 +42,16 @@ public class VarTable implements Map<String, VarArg> {
      * @param type ArgType
      * @return this
      */
-    public VarTable putVar(String name, VarScope scope, ArgType type) {
-        varMap.put(name, new VarArg(name, scope, type));
-        return this;
+    public boolean putVar(String name, VarScope scope, boolean isDynamic, ArgType type) {
+        if (varExists(name)) return false;
+        varMap.put(name, new VarArg(name, scope, isDynamic, type));
+        return true;
+    }
+
+    public boolean putVar(VarArg varArg){
+        if (varExists(varArg.getName())) return false;
+        varMap.put(varArg.getName(), varArg);
+        return true;
     }
 
     public VarScope getVarScope(String name){

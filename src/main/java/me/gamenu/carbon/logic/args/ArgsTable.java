@@ -86,33 +86,45 @@ public class ArgsTable implements toJSONObject {
         return this;
     }
 
+    public ArgsTable insertExtend(ArgsTable other){
+        argList.addAll(0, other.getArgDataList());
+        return this;
+    }
+
     public CodeArg get(int slot){
         return argList.get(slot);
     }
 
-    public boolean matchParams(ArgsTable paramsTable) {
-        if (paramsTable.getArgDataList().size() != getArgDataList().size()) return false;
+    public boolean matchSizes(ArgsTable paramsTable){
+        return paramsTable.getArgDataList().size() == getArgDataList().size();
+    }
+
+    public int matchParams(ArgsTable paramsTable) {
         for (int i = 0; i < argList.size(); i++) {
             FunctionParam otherArg = ((FunctionParam) paramsTable.get(i));
             CodeArg thisArg = get(i);
-            if (!matchSingleParam(thisArg, otherArg)) return false;
+            if (!matchSingleParam(thisArg, otherArg)) return i;
         }
-        return true;
+        return -1;
     }
 
     private static boolean matchSingleParam(CodeArg thisArg, FunctionParam toMatch) {
         ArgType thisType = thisArg.getType();
-        ArgType otherType = toMatch.getParamType();
-        // Alright, so:
-        // Check if the types match.
-        if (thisType != otherType) {
-            if (otherType == ArgType.ANY) return true;
-            if (thisType == ArgType.VAR) {
-                ArgType varType = ((VarArg) thisArg).getVarType();
-                return varType == otherType;
+        ArgType paramType = toMatch.getParamType();
+
+        if (paramType == ArgType.ANY) return true;
+        if (paramType != ArgType.VAR) {
+            if (thisType != ArgType.VAR) {
+                return thisType == paramType;
             }
+            return ((VarArg) thisArg).getVarType() == paramType;
         }
-        return true;
+
+        if (thisType != ArgType.VAR) {
+            return thisType == ((VarArg) toMatch.getInternalArg()).getVarType();
+        }
+
+        return ((VarArg) thisArg).getVarType() == ((VarArg) toMatch.getInternalArg()).getVarType();
     }
 
     public boolean matchTypes(ArrayList<ArgType> other){

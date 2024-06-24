@@ -1,5 +1,11 @@
 package me.gamenu.carbon.logic.blocks;
 
+import me.gamenu.carbon.logic.args.ArgType;
+import me.gamenu.carbon.logic.args.ArgsTable;
+import me.gamenu.carbon.logic.args.CodeArg;
+
+import java.util.HashMap;
+
 public enum ActionType {
 
     // IDs are UNIQUE! Make sure to not fuck it up!
@@ -12,9 +18,20 @@ public enum ActionType {
     ADD_NUMBERS("+", "add", BlockType.SET_VARIABLE),
     SUBTRACT_NUMBERS("-", "sub", BlockType.SET_VARIABLE),
     MULTIPLY_NUMBERS("x", "mult", BlockType.SET_VARIABLE),
-    DIVIDE_NUMBERS("/", "div", BlockType.SET_VARIABLE)
+    DIVIDE_NUMBERS("/", "div", BlockType.SET_VARIABLE),
+    RETURN("Return", "return", BlockType.CONTROL)
     ;
 
+    private static final HashMap<String, ArgsTable> baseFunsReturns = new HashMap<>() {{
+        put("add", new ArgsTable().addAtFirstNull(new CodeArg(ArgType.NUM)));
+        put("sub", new ArgsTable().addAtFirstNull(new CodeArg(ArgType.NUM)));
+        put("mult", new ArgsTable().addAtFirstNull(new CodeArg(ArgType.NUM)));
+        put("div", new ArgsTable().addAtFirstNull(new CodeArg(ArgType.NUM)));
+    }};
+
+    public static HashMap<String, ArgsTable> getBaseFunsReturns() {
+        return baseFunsReturns;
+    }
 
     private final String id;
     private final String codeName;

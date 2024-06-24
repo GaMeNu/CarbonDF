@@ -27,7 +27,7 @@ public class TranspileUtils {
 
     public static ArgType standaloneToArgType(CarbonDFParser.Standalone_itemContext ctx){
         if (ctx.simple_item().number() != null) return ArgType.NUM;
-        if (ctx.simple_item().string() != null) return ArgType.STRING;
+        if (ctx.simple_item().simple_string() != null) return ArgType.STRING;
         if (ctx.simple_item().styled_text() != null) return ArgType.STYLED_TEXT;
         return null;
     }

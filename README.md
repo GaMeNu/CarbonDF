@@ -19,14 +19,14 @@ fun multiply(param, other_param: num){
 
 ```CarbonDF
 hidden proc lightningLoop() {
-    launchPower = 20;
-    repeat (forever) {
+    line launchPower = 20;
+    repeat (forever()) {
         
         line playerPos = default.location;
-        game.summonLightning(playerPos);
-        game.createExplosion(playerPos);
-        default.launchUp(launchPower);
-        default.sendMessage('<#FFFFFF>Thou hast been <#FFFF00>smitten<#FFFFFF>!');
+        GameAction::summonLightning(playerPos);
+        GameAction::createExplosion(playerPos);
+        PlayerAction::default.launchUp(launchPower);
+        sendMessage('<#FFFFFF>Thou hast been <#FFFF00>smitten<#FFFFFF>!');
         wait(60);
     }
 }

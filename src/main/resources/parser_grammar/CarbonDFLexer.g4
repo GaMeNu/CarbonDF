@@ -20,3 +20,5 @@ MOD_EXTERN: 'extern';
 
 PARAM_PLURAL: '*';
 PARAM_OPTIONAL: '?';
+
+RETURN_ARROW: '->';
