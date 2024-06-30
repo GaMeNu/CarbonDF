@@ -43,6 +43,8 @@ public class FunListener extends BaseCarbonListener {
         super.enterFun_call(ctx);
         if (ctx.fun_call_chain() != null) enterFun_call_chain(ctx.fun_call_chain());
         enterSingle_fun_call(ctx.single_fun_call());
+        if (!funReturnVars.getArgDataList().isEmpty())
+            block.getArgs().insertExtend(funReturnVars);
         blocksTable.add(block);
     }
 
@@ -142,8 +144,6 @@ public class FunListener extends BaseCarbonListener {
         performTypeValidation(ctx);
         performValueValidation(ctx);
 
-        if (!funReturnVars.getArgDataList().isEmpty())
-            block.getArgs().insertExtend(funReturnVars);
     }
 
     private void returnSpecialCase(CarbonDFParser.Call_paramsContext ctx, ArgsTable newArgsTable) {
@@ -235,7 +235,7 @@ public class FunListener extends BaseCarbonListener {
         for (CarbonDFParser.Var_define_nameContext nameCtx : ctx.var_define_name()){
             varName = nameCtx.var_name().getText();
 
-            if (varTable.varExists(varName)) throwError("Variable \"" + varName + "\" was redefined", ctx, CarbonTranspileException.class);
+            if (varTable.varExists(varName)) throwError("Variable \"" + varName + "\" was redefined", nameCtx, CarbonTranspileException.class);
 
             if (nameCtx.type_annotations() != null) {
                 isDynamic = false;
@@ -289,8 +289,10 @@ public class FunListener extends BaseCarbonListener {
             if (!varTable.varExists(varName))
                 throwError("Could not identify variable \"" + varName + "\", are you sure it is defined?", ctx, InvalidNameException.class);
 
-            if (valCtx.standalone_item() != null){
-                assignStandalone(ctx, nameCtx, valCtx.standalone_item());
+            if (valCtx.any_item().standalone_item() != null) {
+                assignStandalone(ctx, nameCtx, valCtx.any_item().standalone_item());
+            } else if (valCtx.any_item().complex_item() != null) {
+                assignComplex(ctx, nameCtx, valCtx.any_item().complex_item());
             } else if (valCtx.var_name() != null) {
                 assignVarName(ctx, nameCtx, valCtx.var_name());
             } else if (valCtx.fun_call() != null) {
@@ -325,6 +327,157 @@ public class FunListener extends BaseCarbonListener {
                 .addAtFirstNull(valArg);
         blocksTable.add(new CodeBlock(BlockType.SET_VARIABLE, ActionType.SIMPLE_ASSIGN).setArgs(resTable));
     }
+
+    private void assignComplex(ParserRuleContext ctx, CarbonDFParser.Var_nameContext varCtx, CarbonDFParser.Complex_itemContext complexCtx) {
+        String varName = varCtx.getText();
+        newComplex(ctx, varName, 0, complexCtx);
+    }
+
+    private void newComplex(ParserRuleContext ctx, String varName, int depth, CarbonDFParser.Complex_itemContext itemCtx){
+        depth += 1;
+
+        // Put new var for generation
+        if (depth > 1){
+            if (varTable.varExists(varName)) {
+                throwError("Used reserved value for complex item generation (+5 CDF points for figuring it out)", itemCtx, CarbonTranspileException.class);
+                return;
+            }
+            varTable.putVar(new VarArg(varName, VarScope.LINE, true));
+        }
+
+        if (itemCtx.list() != null){
+            varTable.get(varName).setValue(new CodeArg(ArgType.LIST));
+            newList(ctx, varName, depth, itemCtx.list());
+        } else if (itemCtx.dict() != null) {
+            varTable.get(varName).setValue(new CodeArg(ArgType.DICT));
+            newDict(ctx, varName, depth, itemCtx.dict());
+        } else {
+            throwError("How did we get here...? (+10 points fro breaking the transpiler)", ctx, CarbonTranspileException.class);
+            return;
+        }
+
+        // Remove var
+        if (depth > 1){
+            varTable.remove(varName);
+        }
+    }
+
+    private void newList(ParserRuleContext ctx, String varName, int depth, CarbonDFParser.ListContext listCtx){
+        // Create the new ArgsTable and add the first var
+        ArgsTable resArgs = new ArgsTable();
+        resArgs.addAtFirstNull(varTable.get(varName));
+
+        for (int i = 0; i < listCtx.any_item().size(); i++) {
+            CarbonDFParser.Any_itemContext curItem = listCtx.any_item(i);
+            if (curItem.standalone_item() != null){
+                resArgs.addAtFirstNull(standaloneToCodeArg(curItem.standalone_item()));
+            } else if (curItem.var_name() != null) {
+                String newVar = curItem.var_name().getText();
+                if (!varTable.varExists(newVar)) {
+                    throwError("Could not identify variable \"" + newVar + "\", are you sure it is defined?", curItem, InvalidNameException.class);
+                    return;
+                }
+                if (varTable.get(newVar).getValue() == null)
+                    throwError("Variable was never assigned a value", curItem, CarbonTranspileException.class, CarbonTranspileException.Severity.WARN);
+                resArgs.addAtFirstNull(varTable.get(curItem.var_name().getText()));
+            } else if (curItem.complex_item() != null){
+                String newName = varName + "@" + i;
+                newComplex(ctx, newName, depth, curItem.complex_item());
+                resArgs.addAtFirstNull(new VarArg(newName, VarScope.LINE, true));
+            }
+        }
+
+        CodeBlock newBlock = new CodeBlock(BlockType.SET_VARIABLE, ActionType.CREATE_LIST)
+                .setArgs(resArgs);
+
+        blocksTable.add(newBlock);
+
+    }
+
+    private void newDict(ParserRuleContext ctx, String varName, int depth, CarbonDFParser.DictContext dictCtx){
+
+        ArrayList<String> registeredKeys = new ArrayList<>();
+
+        String nameK = varName + ".k";
+        String nameV = varName + ".v";
+
+        varTable.putVar(new VarArg(nameK, VarScope.LINE, false).setValue(new CodeArg(ArgType.LIST)));
+        varTable.putVar(new VarArg(nameV, VarScope.LINE, false).setValue(new CodeArg(ArgType.LIST)));
+
+        ArgsTable resKeys = new ArgsTable()
+                .addAtFirstNull(varTable.get(nameK));
+        ArgsTable resVals = new ArgsTable()
+                .addAtFirstNull(varTable.get(nameV));
+
+        for (int i = 0; i < dictCtx.dict_pair().size(); i++) {
+            CarbonDFParser.Dict_pairContext curPair = dictCtx.dict_pair(i);
+            CarbonDFParser.Simple_stringContext keyCtx = curPair.key().simple_string();
+            CarbonDFParser.Any_itemContext itemCtx = curPair.any_item();
+            String keyStr = keyCtx.getText().substring(1, keyCtx.getText().length()-1);
+
+            // Check if key exists
+            if (registeredKeys.contains(keyStr)) {
+                throwError("Dictionaries cannot contain the same key twice when defined", keyCtx, CarbonTranspileException.class);
+                return;
+            }
+
+            // Add key to keys lists
+            registeredKeys.add(keyStr);
+            resKeys.addAtFirstNull(new CodeArg(ArgType.STRING).setArgName(keyStr));
+
+            if (itemCtx.standalone_item() != null){
+                resVals.addAtFirstNull(standaloneToCodeArg(itemCtx.standalone_item()));
+            } else if (itemCtx.var_name() != null) {
+                String newVar = itemCtx.var_name().getText();
+                if (!varTable.varExists(newVar)){
+                    throwError("Could not identify variable \"" + newVar + "\", are you sure it is defined?", itemCtx, InvalidNameException.class);
+                    return;
+                }
+
+                if (varTable.get(newVar).getValue() == null){
+                    throwError("Variable was never assigned a value", itemCtx, CarbonTranspileException.class, CarbonTranspileException.Severity.WARN);
+                }
+
+                resVals.addAtFirstNull(varTable.get(newVar));
+            } else if (itemCtx.complex_item() != null){
+                String newName = varName + "@" + keyStr;
+                newComplex(ctx, newName, depth, itemCtx.complex_item());
+                resVals.addAtFirstNull(new VarArg(newName, VarScope.LINE, true));
+            }
+
+        }
+
+        ArgsTable resArgs = new ArgsTable()
+                .addAtFirstNull(varTable.get(varName));
+
+        // Space-saving measure, no need to create the list blocks if the dict is empty anyway :shrug:
+        if (!dictCtx.dict_pair().isEmpty()){
+            CodeBlock keysBlock = new CodeBlock(BlockType.SET_VARIABLE, ActionType.CREATE_LIST)
+                    .setArgs(resKeys);
+
+            CodeBlock valsBlock = new CodeBlock(BlockType.SET_VARIABLE, ActionType.CREATE_LIST)
+                    .setArgs(resVals);
+
+            blocksTable
+                    .add(keysBlock)
+                    .add(valsBlock);
+
+            resArgs
+                    .addAtFirstNull(varTable.get(nameK))
+                    .addAtFirstNull(varTable.get(nameV));
+
+        }
+
+        CodeBlock dictBlock = new CodeBlock(BlockType.SET_VARIABLE, ActionType.CREATE_DICT)
+                .setArgs(resArgs);
+
+
+        blocksTable.add(dictBlock);
+
+        varTable.remove(nameK);
+        varTable.remove(nameV);
+    }
+
 
     private void assignVarName(ParserRuleContext ctx, CarbonDFParser.Var_nameContext varCtx, CarbonDFParser.Var_nameContext valCtx){
         String varName = varCtx.getText();
@@ -384,6 +537,8 @@ public class FunListener extends BaseCarbonListener {
             CarbonDFParser.Var_nameContext nameCtx = nameCtxLs.get(i);
             varName = nameCtx.getText();
 
+            System.out.println(varName);
+
             if (!varTable.varExists(varName)) {
                 throwError("Could not identify variable \"" + varName + "\", are you sure it is defined?", ctx, InvalidNameException.class);
             }
@@ -391,9 +546,17 @@ public class FunListener extends BaseCarbonListener {
             VarArg var = varTable.get(varName);
             ArgType retType = args.get(i).getType();
 
-            if (var.isDynamic()) {
+            // Base functions and defined functions have a different standard.
+            // This is the very bad patch.
+            // DO NOT TOUCH UNLESS THIS BREAKS.
+            if (retType == ArgType.PARAM){
+                retType = ((VarArg)((FunctionParam) args.get(i)).getInternalArg()).getVarType();
+            }
+
+            if (var != null && var.isDynamic()) {
                 var.setVarType(retType);
             }
+
 
             var.setValue(new CodeArg(retType));
 
@@ -402,7 +565,9 @@ public class FunListener extends BaseCarbonListener {
                     && var.getVarType() != retType)
                 throwError(String.format("Assigned type %s does not match defined type %s for statically-typed variable %s", retType, var.getVarType(), var.getName()), nameCtx, CarbonTranspileException.class);
 
+            System.out.println(varTable.get(varName));
             resTable.addAtFirstNull(varTable.get(varName));
+            System.out.println(resTable.getArgDataList());
 
         }
 

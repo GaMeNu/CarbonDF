@@ -15,6 +15,8 @@ public class TranspileUtils {
             case TA_NUM -> ArgType.NUM;
             case TA_STRING -> ArgType.STRING;
             case TA_ST -> ArgType.STYLED_TEXT;
+            case TA_LIST -> ArgType.LIST;
+            case TA_DICT -> ArgType.DICT;
             default -> throw new UnknownSymbolException(ctx.getText());
         };
     }

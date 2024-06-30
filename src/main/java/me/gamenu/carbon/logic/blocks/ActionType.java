@@ -1,8 +1,6 @@
 package me.gamenu.carbon.logic.blocks;
 
-import me.gamenu.carbon.logic.args.ArgType;
-import me.gamenu.carbon.logic.args.ArgsTable;
-import me.gamenu.carbon.logic.args.CodeArg;
+import me.gamenu.carbon.logic.args.*;
 
 import java.util.HashMap;
 
@@ -15,12 +13,15 @@ public enum ActionType {
     DYNAMIC("dynamic","null", null),
     SEND_MESSAGE("SendMessage", "sendMessage", BlockType.PLAYER_ACTION),
     SIMPLE_ASSIGN("=", "assign", BlockType.SET_VARIABLE),
+    CREATE_LIST("CreateList", "createList", BlockType.SET_VARIABLE),
+    CREATE_DICT("CreateDict", "createDict", BlockType.SET_VARIABLE),
     ADD_NUMBERS("+", "add", BlockType.SET_VARIABLE),
     SUBTRACT_NUMBERS("-", "sub", BlockType.SET_VARIABLE),
     MULTIPLY_NUMBERS("x", "mult", BlockType.SET_VARIABLE),
     DIVIDE_NUMBERS("/", "div", BlockType.SET_VARIABLE),
     RETURN("Return", "return", BlockType.CONTROL)
     ;
+
 
     private static final HashMap<String, ArgsTable> baseFunsReturns = new HashMap<>() {{
         put("add", new ArgsTable().addAtFirstNull(new CodeArg(ArgType.NUM)));

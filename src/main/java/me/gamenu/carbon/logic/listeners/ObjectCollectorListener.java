@@ -60,6 +60,7 @@ public class ObjectCollectorListener extends BaseCarbonListener{
     public void enterStartdef(CarbonDFParser.StartdefContext ctx) {
         super.enterStartdef(ctx);
         String name = ctx.def_name().getText();
+        curParams = new ArgsTable();
         curType.setName(name);
         curType.setHidden(ctx.vis_modifier() != null);
         try {
@@ -83,6 +84,8 @@ public class ObjectCollectorListener extends BaseCarbonListener{
 
             enterRet_params(ctx.ret_params());
 
+            if (curParams == null) return;
+
             ArgsTable returns = new ArgsTable();
             for (CodeArg arg : curParams.getArgDataList()){
                 FunctionParam param = (FunctionParam) arg;
@@ -93,6 +96,7 @@ public class ObjectCollectorListener extends BaseCarbonListener{
             }
 
             curType.setReturns(returns);
+
         }
     }
 

@@ -1,15 +1,32 @@
-fun ret_test(input: num, input2: str) -> (res: num, res2: str){
-    line wawa = mult(input, input2);
-    return(wawa, "1");
+
+fun multiply(n: num, m: num) -> (result: num){
+    line res = mult(n, m);
+    return(res);
 }
 
-fun main(){
-    line val = 1;
-    _, _ = ret_test(val, "1");
-}
+extern fun multi_return() -> (num1: num, num2: num);
 
-/**
- * SetVariable::assign(res, test) // res = test;
- * SetVariable::assign(res2, "Hello world!")
- * Control::return();
- */
+fun main() {
+
+    // Return variables and multiple returns
+    line aa = multiply(1, 2);
+    line
+        num1: num,
+        num2: num
+    = multi_return();
+
+    // Complex items
+    _ = {
+        "test": aa,
+        "test2": 10,
+        "dicting": {
+            "hello": "world"
+        },
+        "listing": [
+            1,
+            [ 2 ],
+            3
+        ]
+    };
+
+}

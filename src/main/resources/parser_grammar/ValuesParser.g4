@@ -8,7 +8,7 @@ options {
     tokenVocab = ValuesLexer;
 }
 
-any_item: standalone_item | complex_item;
+any_item: standalone_item | complex_item | var_name;
 standalone_item: simple_item;
 
 // very basic items.
@@ -57,6 +57,8 @@ styled_text
 ;
 
 number: NUMBER;
+
+var_name: SAFE_TEXT;
 
 type_annotations: (TA_ANY | TA_STRING | TA_ST | TA_NUM | TA_LOC | TA_VECT | TA_LIST | TA_DICT | TA_VAR);
 

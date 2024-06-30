@@ -67,9 +67,13 @@ public class ErrorListener extends BaseErrorListener {
         int errDispPointer = lineStr.length() + errStartPointer;
 
         int errEndPointer = -1;
-        if (offendingSymbol instanceof CommonToken) errEndPointer = errStartPointer + ((CommonToken) offendingSymbol).getText().length();
-        else if (e != null && e.getOffendingToken() != null) errEndPointer = errStartPointer + e.getOffendingToken().getText().length();
-        else if (e != null) errEndPointer = errStartPointer = e.getCtx().getText().length();
+        if (offendingSymbol instanceof CommonToken) {
+            errEndPointer = errStartPointer + ((CommonToken) offendingSymbol).getText().length();
+        } else if (e != null && e.getOffendingToken() != null) {
+            errEndPointer = errStartPointer + e.getOffendingToken().getText().length();
+        } else if (e != null) {
+            errEndPointer = errStartPointer = e.getCtx().getText().length();
+        }
 
         String textFmt;
         if (errEndPointer != -1) textFmt = ANSICode(ANSI_WHITE, ANSI_BOLD) + textTrim.substring(0, errStartPointer) + ANSICode(ANSI_RED, ANSI_BOLD) + textTrim.substring(errStartPointer, errEndPointer) + ANSICode(ANSI_WHITE, ANSI_BOLD) + textTrim.substring(errEndPointer) + ANSICode(ANSI_RESET);

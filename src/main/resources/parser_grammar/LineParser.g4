@@ -61,9 +61,7 @@ var_assign:
 
 var_scope: SCOPE_SAVED | SCOPE_GLOBAL | SCOPE_LOCAL | SCOPE_LINE;
 
-var_name: SAFE_TEXT;
-
-var_value: (var_name | standalone_item | fun_call);
+var_value: (var_name | any_item | fun_call);
 
 defblock: '{' WHITESPACES? (single_line WHITESPACES?)* '}';
 
