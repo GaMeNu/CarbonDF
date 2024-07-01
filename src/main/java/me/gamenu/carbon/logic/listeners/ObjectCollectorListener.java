@@ -90,8 +90,7 @@ public class ObjectCollectorListener extends BaseCarbonListener{
             for (CodeArg arg : curParams.getArgDataList()){
                 FunctionParam param = (FunctionParam) arg;
                 returns.addAtFirstNull(new FunctionParam(param.getName(),
-                        new VarArg(param.getName(), VarScope.LINE, false, param.getParamType())
-                                .setValue(new CodeArg(param.getParamType()))
+                        new VarArg(param.getName(), VarScope.LINE, false, param.getInternalArg())
                 ));
             }
 

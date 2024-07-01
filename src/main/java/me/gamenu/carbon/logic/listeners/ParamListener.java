@@ -42,8 +42,11 @@ public class ParamListener extends BaseCarbonListener {
     @Override
     public void enterVar_name(CarbonDFParser.Var_nameContext ctx) {
         super.enterVar_name(ctx);
-        if (!varTable.varExists(ctx.getText())) throwError("Could not identify variable \"" + ctx.getText() + "\". Is it defined?", ctx, InvalidNameException.class);
-        codeArg = new VarArg(ctx.getText(), varTable.getVarScope(ctx.getText()), varTable.get(ctx.getText()).isDynamic(), varTable.getVarType(ctx.getText()));
+        if (!varTable.varExists(ctx.getText())) {
+            throwError("Could not identify variable \"" + ctx.getText() + "\". Is it defined?", ctx, InvalidNameException.class);
+            return;
+        }
+        codeArg = new VarArg(ctx.getText(), varTable.getVarScope(ctx.getText()), varTable.get(ctx.getText()).isDynamic(), varTable.get(ctx.getText()).getValue());
 
     }
 

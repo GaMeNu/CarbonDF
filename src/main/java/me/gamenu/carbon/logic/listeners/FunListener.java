@@ -245,7 +245,7 @@ public class FunListener extends BaseCarbonListener {
                 type = ArgType.ANY;
             }
 
-            VarArg resVar = new VarArg(varName, scope, isDynamic, type);
+            VarArg resVar = new VarArg(varName, scope, isDynamic, new CodeArg(type));
             varTable.putVar(resVar);
 
             nameList.add(nameCtx.var_name());
@@ -314,10 +314,6 @@ public class FunListener extends BaseCarbonListener {
                 varTable.getVarType(varName) != ArgType.ANY &&
                 !varTable.get(varCtx.getText()).isDynamic())
             throwError("Assigned type \"" + valArg.getType() + "\" does not match defined type \"" + varArg.getVarType() + "\" for statically-typed variable \"" + varArg.getName() + "\"", ctx, CarbonTranspileException.class);
-
-        if (varArg.isDynamic()) {
-            varArg.setVarType(valArg.getType());
-        }
 
         varArg.setValue(valArg);
         varTable.putVar(varTable.get(varArg.getName()).setValue(valArg));
@@ -496,9 +492,6 @@ public class FunListener extends BaseCarbonListener {
                 && !var.isDynamic())
             throwError("Assigned type \"" + val.getType() + "\" does not match defined type \"" + var.getVarType() + "\" for statically-typed variable \"" + var.getName() + "\"", ctx, CarbonTranspileException.class);
 
-        if (var.isDynamic())
-            var.setVarType(val.getVarType());
-
         var.setValue(val.getValue());
 
         varTable.putVar(varTable.get(var.getName()).setValue(val.getValue()));
@@ -541,6 +534,7 @@ public class FunListener extends BaseCarbonListener {
 
             if (!varTable.varExists(varName)) {
                 throwError("Could not identify variable \"" + varName + "\", are you sure it is defined?", ctx, InvalidNameException.class);
+                return;
             }
 
             VarArg var = varTable.get(varName);
@@ -553,17 +547,12 @@ public class FunListener extends BaseCarbonListener {
                 retType = ((VarArg)((FunctionParam) args.get(i)).getInternalArg()).getVarType();
             }
 
-            if (var != null && var.isDynamic()) {
-                var.setVarType(retType);
-            }
-
-
-            var.setValue(new CodeArg(retType));
-
             if (!var.isDynamic()
                     && var.getVarType() != ArgType.ANY
                     && var.getVarType() != retType)
                 throwError(String.format("Assigned type %s does not match defined type %s for statically-typed variable %s", retType, var.getVarType(), var.getName()), nameCtx, CarbonTranspileException.class);
+
+            var.setValue(new CodeArg(retType));
 
             System.out.println(varTable.get(varName));
             resTable.addAtFirstNull(varTable.get(varName));

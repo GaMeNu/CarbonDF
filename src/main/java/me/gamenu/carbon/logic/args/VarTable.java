@@ -12,42 +12,19 @@ public class VarTable implements Map<String, VarArg> {
         varMap = new HashMap<>();
     }
 
-    /**
-     * This var will automatically be assigned the ANY type.
-     * If type checking is enabled, this will override the type checking
-     * @param name String
-     * @param scope VarScope
-     * @return this
-     */
-    public VarTable putVar(String name, VarScope scope, boolean isDynamic) {
-        varMap.put(name, new VarArg(name, scope, isDynamic, ArgType.ANY));
-        return this;
-    }
 
-    public VarTable putVar(String name, VarArg var){
-        varMap.put(name, var);
-        return this;
-    }
 
     public HashMap<String, VarArg> getVarMap() {
         return varMap;
     }
 
-    /**
-     * This var will be assigned the given type.
-     * If type checking is enabled and the variable gets assigned a value that doesn't match the type,
-     * the transpiler will throw an error.
-     * @param name String
-     * @param scope VarScope
-     * @param type ArgType
-     * @return this
-     */
-    public boolean putVar(String name, VarScope scope, boolean isDynamic, ArgType type) {
-        if (varExists(name)) return false;
-        varMap.put(name, new VarArg(name, scope, isDynamic, type));
-        return true;
-    }
 
+    /**
+     * Smart putVar.
+     * This will take a single VarArg, and automatically create a new map entry for it, with the name of the var as the id.
+     * @param varArg varArg to put
+     * @return whether the var was set successfully.
+     */
     public boolean putVar(VarArg varArg){
         if (varExists(varArg.getName())) return false;
         varMap.put(varArg.getName(), varArg);
@@ -74,8 +51,8 @@ public class VarTable implements Map<String, VarArg> {
         varMap.entrySet().removeIf(entry -> entry.getValue().getScope() == VarScope.LOCAL);
     }
 
-    public void setVarType(String name, ArgType type){
-        varMap.get(name).setVarType(type);
+    public void setVarValue(String name, CodeArg value){
+        varMap.get(name).setValue(value);
     }
 
     /**

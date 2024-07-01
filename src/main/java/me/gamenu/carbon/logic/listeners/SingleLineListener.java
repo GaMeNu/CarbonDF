@@ -5,24 +5,16 @@ import me.gamenu.carbon.logic.blocks.BlocksTable;
 import me.gamenu.carbon.logic.compile.ProgramContext;
 import me.gamenu.carbon.parser.CarbonDFParser;
 
-public class DefblockListener extends BaseCarbonListener{
+public class SingleLineListener extends BaseCarbonListener{
 
     BlocksTable blocksTable;
     VarTable varTable;
 
-    public DefblockListener(ProgramContext programContext) {
+    public SingleLineListener(ProgramContext programContext) {
         super(programContext);
 
         this.blocksTable = programContext.getCurrentDefTable();
         this.varTable = programContext.getVarTable();
-    }
-
-    @Override
-    public void enterDefblock(CarbonDFParser.DefblockContext ctx) {
-        super.enterDefblock(ctx);
-        for (CarbonDFParser.Single_lineContext lineCtx : ctx.single_line()) {
-            enterSingle_line(lineCtx);
-        }
     }
 
     @Override
@@ -50,5 +42,10 @@ public class DefblockListener extends BaseCarbonListener{
     @Override
     public void enterCompound_statement(CarbonDFParser.Compound_statementContext ctx) {
         super.enterCompound_statement(ctx);
+
+        if (ctx.if_statement() != null){
+            IfListener ifListener = new IfListener(programContext);
+            ifListener.enterIf_statement(ctx.if_statement());
+        }
     }
 }

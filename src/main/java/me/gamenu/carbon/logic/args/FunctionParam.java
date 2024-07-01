@@ -11,6 +11,8 @@ public class FunctionParam extends CodeArg{
     boolean plural;
     boolean optional;
 
+    CodeArg defaultValue;
+
 
     public FunctionParam(String name, CodeArg arg){
         super(ArgType.PARAM);
@@ -56,6 +58,15 @@ public class FunctionParam extends CodeArg{
         return this;
     }
 
+    public CodeArg getDefaultValue() {
+        return defaultValue;
+    }
+
+    public FunctionParam setDefaultValue(CodeArg defaultValue) {
+        this.defaultValue = defaultValue;
+        return this;
+    }
+
     @Override
     public JSONObject toJSON() {
         JSONObject res = super.toJSON();
@@ -64,6 +75,8 @@ public class FunctionParam extends CodeArg{
                 .put("type", internalArg.getType().getID())
                 .put("plural", plural)
                 .put("optional", optional);
+        if (defaultValue != null)
+            res.put("default_value", defaultValue.toJSON());
         return res;
     }
 }

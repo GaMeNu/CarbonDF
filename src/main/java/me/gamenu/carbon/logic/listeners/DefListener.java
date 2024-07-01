@@ -62,8 +62,8 @@ public class DefListener extends BaseCarbonListener {
         defTable.add(defBlock);
 
         if (!isExtern) {
-            DefblockListener defblockListener = new DefblockListener(programContext);
-            ctx.defblock().enterRule(defblockListener);
+
+            enterDefblock(ctx.defblock());
         }
 
         exitSingle_def(ctx);
@@ -132,8 +132,7 @@ public class DefListener extends BaseCarbonListener {
         for (CodeArg arg : paramOutputBuffer.getArgDataList()) {
             FunctionParam newParam = (FunctionParam) arg;
             varTable.putVar(
-                    new VarArg(newParam.getName(), VarScope.LINE, false, newParam.getParamType())
-                            .setValue(new CodeArg(newParam.getParamType()))
+                    new VarArg(newParam.getName(), VarScope.LINE, false, newParam.getInternalArg())
             );
         }
 
@@ -158,12 +157,12 @@ public class DefListener extends BaseCarbonListener {
         for (int i = 0; i < paramOutputBuffer.getArgDataList().size(); i++){
             FunctionParam currentParam = (FunctionParam) paramOutputBuffer.get(i);
             newPar = new FunctionParam(currentParam.getName(),
-                    new VarArg(currentParam.getName(), VarScope.LINE, false, currentParam.getParamType())
+                    new VarArg(currentParam.getName(), VarScope.LINE, false, currentParam.getInternalArg())
             );
 
             defBlock.getArgs().add(i, newPar);
 
-            VarArg curVar = new VarArg(currentParam.getName(), VarScope.LINE, false, currentParam.getParamType());
+            VarArg curVar = new VarArg(currentParam.getName(), VarScope.LINE, false, currentParam.getInternalArg());
 
 
             varTable.putVar(curVar);
@@ -184,6 +183,27 @@ public class DefListener extends BaseCarbonListener {
         if (newParam.getParamType() == ArgType.VAR) throwError("Variable Parameters are not allowed within function arguments. Please write them as return arguments instead.", ctx, CarbonTranspileException.class);
         if (varTable.varExists(newParam.getName())) throwError("Variable \"" + newParam.getName() + "\" was redefined", ctx, CarbonTranspileException.class);
 
+        if (ctx.param_options() != null){
+            System.out.println(ctx.param_options().getText());
+            if (ctx.param_options().PARAM_OPTIONAL(0) != null) {
+                newParam.setOptional(true);
+            }
+            if (ctx.param_options().PARAM_PLURAL(0) != null) {
+                newParam.setPlural(true);
+            }
+        }
+
+        if (ctx.standalone_item() != null){
+            if (!newParam.isOptional() || newParam.isPlural()) {
+                throwError("Only optional and non-plural parameters may have a default value", ctx.standalone_item(), CarbonTranspileException.class);
+            }
+
+            CodeArg defVal = standaloneToCodeArg(ctx.standalone_item());
+            if (newParam.getParamType() != defVal.getType()
+                    && newParam.getParamType() != ArgType.ANY)
+                throwError("Param type " + newParam.getParamType() + " does not match type of default value " + defVal.getType(), ctx.standalone_item(), CarbonTranspileException.class);
+            
+        }
         paramOutputBuffer.addAtFirstNull(newParam);
     }
 
@@ -202,5 +222,21 @@ public class DefListener extends BaseCarbonListener {
         } else {
             return new BlockTag("Is Hidden", BlockType.PROCESS, ActionType.DYNAMIC, "False");
         }
+    }
+
+    @Override
+    public void enterDefblock(CarbonDFParser.DefblockContext ctx) {
+        super.enterDefblock(ctx);
+        SingleLineListener singleLineListener = new SingleLineListener(programContext);
+        for (CarbonDFParser.Single_lineContext lineCtx : ctx.single_line()) {
+            lineCtx.enterRule(singleLineListener);
+        }
+    }
+
+    // This is duped from FunListener#standaloneToCodeArg because I'm lazy
+    private CodeArg standaloneToCodeArg(CarbonDFParser.Standalone_itemContext itemCtx) {
+        ParamListener paramListener = new ParamListener(programContext);
+        paramListener.enterStandalone_item(itemCtx);
+        return paramListener.getCodeArg();
     }
 }

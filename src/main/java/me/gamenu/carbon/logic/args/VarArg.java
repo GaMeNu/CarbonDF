@@ -7,7 +7,6 @@ public class VarArg extends CodeArg{
     String name;
     VarScope scope;
 
-    ArgType varType;
     boolean isDynamic;
 
     CodeArg value;
@@ -16,16 +15,14 @@ public class VarArg extends CodeArg{
         super(ArgType.VAR);
         this.name = name;
         this.scope = scope;
-        this.varType = ArgType.ANY;
         this.isDynamic = isDynamic;
-        this.value = null;
+        this.value = new CodeArg(ArgType.ANY);
     }
 
     public VarArg(VarArg other){
         super(ArgType.VAR);
         this.name = other.name;
         this.scope = other.scope;
-        this.varType = other.varType;
         this.isDynamic = other.isDynamic;
         this.value = other.value;
     }
@@ -34,11 +31,17 @@ public class VarArg extends CodeArg{
         super(ArgType.VAR);
         this.name = name;
         this.scope = scope;
-        this.varType = varType;
         this.isDynamic = isDynamic;
-        this.value = null;
+        this.value = new CodeArg(varType);
     }
 
+    public VarArg(String name, VarScope scope, boolean isDynamic, CodeArg value) {
+        super(ArgType.VAR);
+        this.name = name;
+        this.scope = scope;
+        this.isDynamic = isDynamic;
+        this.value = value;
+    }
 
     public VarArg setValue(CodeArg value) {
         this.value = value;
@@ -58,12 +61,8 @@ public class VarArg extends CodeArg{
     }
 
     public ArgType getVarType() {
-        return varType;
-    }
-
-    public VarArg setVarType(ArgType varType) {
-        this.varType = varType;
-        return this;
+        if (value == null) return ArgType.ANY;
+        return value.getType();
     }
 
     public boolean isDynamic() {

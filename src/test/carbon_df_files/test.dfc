@@ -1,32 +1,15 @@
-
-fun multiply(n: num, m: num) -> (result: num){
-    line res = mult(n, m);
-    return(res);
+fun test(?in: num, *in2: num) -> (out: num, out2: num){
+    line res1: any = mult(in, in2);
+    line res2: num = mult(res1, 2);
+    return(res1, res2);
 }
 
-extern fun multi_return() -> (num1: num, num2: num);
 
 fun main() {
-
-    // Return variables and multiple returns
-    line aa = multiply(1, 2);
-    line
-        num1: num,
-        num2: num
-    = multi_return();
-
-    // Complex items
-    _ = {
-        "test": aa,
-        "test2": 10,
-        "dicting": {
-            "hello": "world"
-        },
-        "listing": [
-            1,
-            [ 2 ],
-            3
-        ]
-    };
-
+    line x = 0;
+    if(equals(x, 0)){
+        x = 1;
+    } else {
+        x = 2;
+    }
 }

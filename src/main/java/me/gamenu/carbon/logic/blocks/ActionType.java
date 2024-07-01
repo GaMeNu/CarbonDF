@@ -19,6 +19,7 @@ public enum ActionType {
     SUBTRACT_NUMBERS("-", "sub", BlockType.SET_VARIABLE),
     MULTIPLY_NUMBERS("x", "mult", BlockType.SET_VARIABLE),
     DIVIDE_NUMBERS("/", "div", BlockType.SET_VARIABLE),
+    IF_EQUALS("=", "equals", BlockType.IF_VARIABLE),
     RETURN("Return", "return", BlockType.CONTROL)
     ;
 

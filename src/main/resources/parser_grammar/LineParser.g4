@@ -17,7 +17,7 @@ simple_statement: (fun_call | var_define | var_assign) LINE_END;
 
 if_statement:
  IF_KEYWORD WHITESPACES?
- '(' ')' WHITESPACES?
+ '(' fun_call ')' WHITESPACES?
  block WHITESPACES?
  (
   ELSE_KEYWORD

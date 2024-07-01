@@ -33,11 +33,11 @@ def_params: def_param (ARG_SEP def_param)*;
 ret_params: def_param (ARG_SEP def_param)*;
 
 def_param
- : SAFE_TEXT param_options
-   ( WHITESPACES? ':' WHITESPACES?
-   type_annotations
-   )?
+ : param_options?
+   SAFE_TEXT
+   ( WHITESPACES? ':' WHITESPACES? type_annotations )?
+   ( WHITESPACES? '=' WHITESPACES? standalone_item)?
  ;
 
-param_options: PARAM_PLURAL? PARAM_OPTIONAL?;
+param_options: (PARAM_PLURAL | PARAM_OPTIONAL)+;
 
