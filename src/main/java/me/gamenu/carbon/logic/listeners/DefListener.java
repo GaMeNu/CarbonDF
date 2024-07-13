@@ -16,8 +16,7 @@ import static me.gamenu.carbon.parser.CarbonDFParser.*;
 
 public class DefListener extends BaseCarbonListener {
 
-    boolean isExtern;
-    boolean isVisible;
+    Modifiers modifiers;
 
     String defName;
 
@@ -43,25 +42,38 @@ public class DefListener extends BaseCarbonListener {
         super.enterSingle_def(ctx);
         defTable = new BlocksTable();
 
+        modifiers = Modifiers.generateModifiers(ctx.startdef());
+
         programContext.setCurrentDefTable(defTable);
         programContext.setCurrentFunFromName(ctx.startdef().def_name().getText());
 
         enterStartdef(ctx.startdef());
 
-        if (ctx.defblock() == null && !isExtern){
+        if (defBlock == null) return;
+
+        if (ctx.defblock() == null && !modifiers.isExtern()){
             if (defBlock.getBlockType() == BlockType.FUNC || defBlock.getBlockType() == BlockType.PROCESS)
                 throwError("Non-external definitions does not contain a body. Please mark your function as \"extern\", or give it a body.", ctx.startdef(), CarbonTranspileException.class);
             else
                 throwError("Event is missing a required body.", ctx.startdef(), CarbonTranspileException.class);
         }
 
-        if (ctx.defblock() != null && isExtern){
+        if (ctx.defblock() != null && modifiers.isExtern()){
             throwError("External definitions cannot contain a function body.", ctx.startdef(), CarbonTranspileException.class);
+        }
+        if (modifiers.isLsCancel()){
+            if (defBlock.getBlockType() != BlockType.EVENT_PLAYER && defBlock.getBlockType() != BlockType.EVENT_ENTITY)
+                throwError("Only cancelable events may have the lscancel modifier.", ctx.startdef().def_keyword(), CarbonTranspileException.class);
+            else if (!defBlock.getActionType().isCancellable()){
+                throwError("Only cancelable events may have the lscancel modifier.", ctx.startdef().def_name(), CarbonTranspileException.class);
+            } else {
+                defBlock.setAttribute(CodeBlock.Attribute.LS_CANCEL);
+            }
         }
 
         defTable.add(defBlock);
 
-        if (!isExtern) {
+        if (!modifiers.isExtern()) {
 
             enterDefblock(ctx.defblock());
         }
@@ -80,8 +92,7 @@ public class DefListener extends BaseCarbonListener {
     public void enterStartdef(CarbonDFParser.StartdefContext ctx) {
         super.enterStartdef(ctx);
 
-        isExtern = ctx.extern_modifier() != null;
-        isVisible = getVisModifier(ctx);
+
         defName = ctx.def_name().getText();
         try {
             switch (((TerminalNode) ctx.def_keyword().getChild(0)).getSymbol().getType()) {
@@ -91,13 +102,14 @@ public class DefListener extends BaseCarbonListener {
                 default -> throw new ParseCancellationException(new UnrecognizedTokenException(ctx.def_keyword().getText()));
             }
         } catch (UnknownEventException e){
-            throwError(e.getMessage(), ctx, CarbonTranspileException.class);
+            throwError(e.getMessage(), ctx.def_name(), CarbonTranspileException.class);
+            return;
         }
 
         enterDef_params(ctx.def_params());
         if (ctx.ret_params() != null) enterRet_params(ctx.ret_params());
 
-        if (isExtern)
+        if (modifiers.isExtern())
             if (defBlock.getBlockType() != BlockType.FUNC && defBlock.getBlockType() != BlockType.PROCESS){
                 throwError("Only functions and processes may be marked as external.", ctx, CarbonTranspileException.class);
             }
@@ -113,10 +125,7 @@ public class DefListener extends BaseCarbonListener {
         else if (defBlock.getBlockType() == BlockType.PROCESS) placeProcessParams();
     }
 
-    private static boolean getVisModifier(CarbonDFParser.StartdefContext context){
-        if (context.vis_modifier() == null) return false;
-        return (context.vis_modifier().MOD_INVISIBLE() != null);
-    }
+
 
 
     @Override
@@ -202,10 +211,18 @@ public class DefListener extends BaseCarbonListener {
             if (newParam.getParamType() != defVal.getType()
                     && newParam.getParamType() != ArgType.ANY)
                 throwError("Param type " + newParam.getParamType() + " does not match type of default value " + defVal.getType(), ctx.standalone_item(), CarbonTranspileException.class);
+
+            if (newParam.getParamType() == ArgType.LIST
+            || newParam.getParamType() == ArgType.DICT
+            || newParam.getParamType() == ArgType.VAR)
+                if (newParam.getDefaultValue() != null)
+                    throwError("Parameter type does not support default values.", ctx, CarbonTranspileException.class);
             
         }
         paramOutputBuffer.addAtFirstNull(newParam);
     }
+
+
 
     private void placeFunctionParams(){
         defBlock.getArgs().set(25, new CodeArg(ArgType.HINT).putData("id", "function"));
@@ -217,7 +234,7 @@ public class DefListener extends BaseCarbonListener {
     }
 
     private BlockTag getHiddenTag() {
-        if (!isVisible){
+        if (!modifiers.isVisible()){
             return new BlockTag("Is Hidden", BlockType.PROCESS, ActionType.DYNAMIC, "True");
         } else {
             return new BlockTag("Is Hidden", BlockType.PROCESS, ActionType.DYNAMIC, "False");

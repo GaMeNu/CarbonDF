@@ -18,6 +18,8 @@ MOD_INVISIBLE: 'hidden';
 
 MOD_EXTERN: 'extern';
 
+MOD_LS_CANCEL: 'ls-cancel';
+
 PARAM_PLURAL: '*';
 PARAM_OPTIONAL: '?';
 

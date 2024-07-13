@@ -11,19 +11,26 @@ single_line: (simple_statement
            | comment)
            ;
 
-compound_statement:  if_statement;
+compound_statement:  if_statement | repeat_statement;
 
 simple_statement: (fun_call | var_define | var_assign) LINE_END;
 
 if_statement:
- IF_KEYWORD WHITESPACES?
- '(' fun_call ')' WHITESPACES?
+ (IF_KEYWORD | IFNT_KEYWORD) (WHITESPACES NOT_KEYWORD)?
+ WHITESPACES?
+ fun_call WHITESPACES?
  block WHITESPACES?
  (
   ELSE_KEYWORD
   WHITESPACES? block WHITESPACES?
  )?;
 
+repeat_statement:
+ REPEAT_KEYWORD WHITESPACES repeat_type (WHITESPACES NOT_KEYWORD)? WHITESPACES?
+ '(' (fun_call | call_params)? ')' WHITESPACES?
+ block WHITESPACES?;
+
+repeat_type: SAFE_TEXT;
 
 fun_call: fun_call_chain? single_fun_call ;
 
@@ -43,7 +50,7 @@ call_params
 
 call_param: standalone_item | var_name;
 
-var_define: var_scope WHITESPACES
+var_define: (CONSTANT_KEYWORD WHITESPACES)? var_scope WHITESPACES
             var_define_name (WHITESPACES? ARG_SEP WHITESPACES? var_define_name)*
             (
               WHITESPACES OP_VAR_ASSIGN WHITESPACES?

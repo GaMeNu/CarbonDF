@@ -228,6 +228,7 @@ public class FunListener extends BaseCarbonListener {
         String varName;
         ArgType type = null;
         boolean isDynamic;
+        boolean isConstant = ctx.CONSTANT_KEYWORD() != null;
 
         ArrayList<CarbonDFParser.Var_nameContext> nameList = new ArrayList<>();
 
@@ -245,7 +246,7 @@ public class FunListener extends BaseCarbonListener {
                 type = ArgType.ANY;
             }
 
-            VarArg resVar = new VarArg(varName, scope, isDynamic, new CodeArg(type));
+            VarArg resVar = new VarArg(varName, scope, isDynamic, new CodeArg(type)).setConstant(isConstant);
             varTable.putVar(resVar);
 
             nameList.add(nameCtx.var_name());
@@ -253,6 +254,8 @@ public class FunListener extends BaseCarbonListener {
 
         if (!ctx.var_value().isEmpty())
             assignVars(ctx, nameList, ctx.var_value());
+        else if (isConstant)
+            throwError("Final variable(s) were declared without a value, and cannot be re-assigned.", ctx, CarbonTranspileException.class, CarbonTranspileException.Severity.WARN);
 
     }
 
@@ -266,6 +269,12 @@ public class FunListener extends BaseCarbonListener {
     public void enterVar_assign(CarbonDFParser.Var_assignContext ctx) {
         super.enterVar_assign(ctx);
 
+        for (CarbonDFParser.Var_nameContext vnCtx : ctx.var_name()){
+            String varName = vnCtx.getText();
+            if (varTable.get(varName).isConstant()){
+                throwError("Constant variable cannot be re-assigned after declaration.", ctx, CarbonTranspileException.class);
+            }
+        }
         assignVars(ctx, ctx.var_name(), ctx.var_value());
 
     }
@@ -277,8 +286,14 @@ public class FunListener extends BaseCarbonListener {
             return;
         }
 
-        if (varNames.size() > varValues.size()) throwError("Not enough values to assign (expected "+varNames.size()+", recieved "+varValues.size()+")", ctx, CarbonTranspileException.class);
-        if (varNames.size() < varValues.size()) throwError("Too many values to assign (expected "+varNames.size()+")", ctx, CarbonTranspileException.class);
+        if (varNames.size() > varValues.size()) {
+            throwError("Not enough values to assign (expected "+varNames.size()+", received "+varValues.size()+")", ctx, CarbonTranspileException.class);
+            return;
+        }
+        if (varNames.size() < varValues.size()) {
+            throwError("Too many values to assign (expected "+varNames.size()+", received " + varValues.size() +")", ctx, CarbonTranspileException.class);
+            return;
+        }
 
         for (int i = 0; i < varNames.size(); i++){
             CarbonDFParser.Var_nameContext nameCtx = varNames.get(i);

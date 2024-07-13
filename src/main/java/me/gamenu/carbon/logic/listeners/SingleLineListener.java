@@ -44,8 +44,11 @@ public class SingleLineListener extends BaseCarbonListener{
         super.enterCompound_statement(ctx);
 
         if (ctx.if_statement() != null){
-            IfListener ifListener = new IfListener(programContext);
+            CompoundListener ifListener = new CompoundListener(programContext);
             ifListener.enterIf_statement(ctx.if_statement());
+        } else if (ctx.repeat_statement() != null) {
+            CompoundListener rptListener = new CompoundListener(programContext);
+            rptListener.enterRepeat_statement(ctx.repeat_statement());
         }
     }
 }

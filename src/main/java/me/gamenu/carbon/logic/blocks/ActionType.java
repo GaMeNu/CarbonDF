@@ -9,17 +9,21 @@ public enum ActionType {
     // IDs are UNIQUE! Make sure to not fuck it up!
     NULL(null, null, null),
     EVENT_JOIN("Join", "Join", BlockType.EVENT_PLAYER),
+    EVENT_LEFT_CLICK("LeftClick", "LeftClick", BlockType.EVENT_PLAYER, true),
     EVENT_ENTITY_DAMAGE_ENTITY("EntityDmgEntity", "EntityDmgEntity", BlockType.EVENT_ENTITY),
     DYNAMIC("dynamic","null", null),
     SEND_MESSAGE("SendMessage", "sendMessage", BlockType.PLAYER_ACTION),
     SIMPLE_ASSIGN("=", "assign", BlockType.SET_VARIABLE),
     CREATE_LIST("CreateList", "createList", BlockType.SET_VARIABLE),
     CREATE_DICT("CreateDict", "createDict", BlockType.SET_VARIABLE),
-    ADD_NUMBERS("+", "add", BlockType.SET_VARIABLE),
+    ADD_NUMBERS("+", "btw add", BlockType.SET_VARIABLE),
     SUBTRACT_NUMBERS("-", "sub", BlockType.SET_VARIABLE),
     MULTIPLY_NUMBERS("x", "mult", BlockType.SET_VARIABLE),
     DIVIDE_NUMBERS("/", "div", BlockType.SET_VARIABLE),
     IF_EQUALS("=", "equals", BlockType.IF_VARIABLE),
+    REPEAT_FOREVER("Forever", "forever", BlockType.REPEAT),
+    REPEAT_WHILE("While", "while", BlockType.REPEAT),
+    REPEAT_MULTIPLE("Multiple", "multiple", BlockType.REPEAT),
     RETURN("Return", "return", BlockType.CONTROL)
     ;
 
@@ -38,13 +42,17 @@ public enum ActionType {
     private final String id;
     private final String codeName;
     private final BlockType blockType;
+    private final boolean cancellable;
 
     ActionType(String id, String codeName, BlockType blockType){
+        this(id, codeName, blockType, false);
+    }
+    ActionType(String id, String codeName, BlockType blockType, boolean cancellable){
         this.id = id;
         this.codeName = codeName;
         this.blockType = blockType;
+        this.cancellable = cancellable;
     }
-
     public String getID() {
         return id;
     }
@@ -72,4 +80,7 @@ public enum ActionType {
         return this.id.equals(other.id);
     }
 
+    public boolean isCancellable() {
+        return cancellable;
+    }
 }

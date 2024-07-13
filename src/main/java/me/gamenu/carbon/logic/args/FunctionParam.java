@@ -14,11 +14,11 @@ public class FunctionParam extends CodeArg{
     CodeArg defaultValue;
 
 
-    public FunctionParam(String name, CodeArg arg){
+    public FunctionParam(String name, CodeArg internalArg){
         super(ArgType.PARAM);
 
         this.name = name;
-        this.internalArg = arg;
+        this.internalArg = internalArg;
         this.plural = false;
         this.optional = false;
     }

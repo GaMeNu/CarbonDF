@@ -14,6 +14,7 @@ public class EventBlock extends CodeBlock implements toJSONObject{
 
     public static HashMap<String, EventBlock> eventIDs = new HashMap<>(){{
         put("Join", new EventBlock(BlockType.EVENT_PLAYER, ActionType.EVENT_JOIN));
+        put("LeftClick", new EventBlock(BlockType.EVENT_PLAYER, ActionType.EVENT_LEFT_CLICK));
         put("EntityDmgEntity", new EventBlock(BlockType.EVENT_ENTITY, ActionType.EVENT_ENTITY_DAMAGE_ENTITY));
     }};
 

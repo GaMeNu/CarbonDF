@@ -16,6 +16,7 @@ public enum BlockType implements CarbonTypeEnum {
     IF_PLAYER("if_player", "IfPlayer"),
     IF_ENTITY("if_entity", "IfEntity"),
     ELSE("else", "Else"),
+    REPEAT("repeat","Repeat"),
     BRACKET("bracket", null),
     CONTROL("control", "Control")
     ;

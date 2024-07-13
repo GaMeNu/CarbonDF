@@ -6,7 +6,11 @@ lexer grammar LineLexer;
 import ValuesLexer;
 
 IF_KEYWORD: 'if';
+IFNT_KEYWORD: 'ifn\'t';
+REPEAT_KEYWORD: 'repeat';
 ELSE_KEYWORD: 'else';
+NOT_KEYWORD: 'not';
+CONSTANT_KEYWORD: 'final';
 
 COMMENT_SINGLE_LINE_OPEN: '//' -> mode(CommentMode);
 COMMENT_MULTI_LINE_OPEN: '/*';

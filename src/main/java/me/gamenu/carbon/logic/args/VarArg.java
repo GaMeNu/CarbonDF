@@ -9,30 +9,20 @@ public class VarArg extends CodeArg{
 
     boolean isDynamic;
 
+    boolean isConstant;
     CodeArg value;
 
     public VarArg(String name, VarScope scope, boolean isDynamic) {
-        super(ArgType.VAR);
-        this.name = name;
-        this.scope = scope;
-        this.isDynamic = isDynamic;
-        this.value = new CodeArg(ArgType.ANY);
+        this(name, scope, isDynamic, ArgType.ANY);
     }
 
     public VarArg(VarArg other){
-        super(ArgType.VAR);
-        this.name = other.name;
-        this.scope = other.scope;
-        this.isDynamic = other.isDynamic;
-        this.value = other.value;
+        this(other.name, other.scope, other.isDynamic, other.value);
+        this.isConstant = other.isConstant;
     }
 
     public VarArg(String name, VarScope scope, boolean isDynamic, ArgType varType) {
-        super(ArgType.VAR);
-        this.name = name;
-        this.scope = scope;
-        this.isDynamic = isDynamic;
-        this.value = new CodeArg(varType);
+        this(name, scope, isDynamic, new CodeArg(varType));
     }
 
     public VarArg(String name, VarScope scope, boolean isDynamic, CodeArg value) {
@@ -46,6 +36,15 @@ public class VarArg extends CodeArg{
     public VarArg setValue(CodeArg value) {
         this.value = value;
         return this;
+    }
+
+    public VarArg setConstant(boolean constant) {
+        isConstant = constant;
+        return this;
+    }
+
+    public boolean isConstant() {
+        return isConstant;
     }
 
     public CodeArg getValue() {

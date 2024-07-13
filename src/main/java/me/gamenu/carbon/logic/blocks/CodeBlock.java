@@ -7,17 +7,30 @@ import org.json.JSONObject;
 
 public class CodeBlock implements toJSONObject {
 
+    public enum Attribute {
+        NOT("NOT"),
+        LS_CANCEL("LS-CANCEL");
+        final String id;
+        Attribute(String id) {
+            this.id = id;
+        }
+
+        public String getId() {
+            return id;
+        }
+    }
+
     BlockType blockType;
     ActionType actionType;
     TargetType targetType;
 
     ArgsTable args;
 
+    Attribute attribute;
+
+
     public CodeBlock(BlockType blockType, ActionType actionType){
-        this.blockType = blockType;
-        this.actionType = actionType;
-        this.targetType = null;
-        this.args = new ArgsTable();
+        this(blockType, actionType, null);
     }
 
     public CodeBlock(BlockType blockType, ActionType actionType, TargetType targetType){
@@ -44,6 +57,15 @@ public class CodeBlock implements toJSONObject {
         return this;
     }
 
+    public CodeBlock setAttribute(Attribute attribute) {
+        this.attribute = attribute;
+        return this;
+    }
+
+    public Attribute getAttribute() {
+        return attribute;
+    }
+
     public JSONObject toJSON(){
         JSONObject block = new JSONObject();
         block.put("id", "block");
@@ -53,6 +75,9 @@ public class CodeBlock implements toJSONObject {
         }
         if (targetType != null){
             block.put("target", targetType.getID());
+        }
+        if (attribute != null){
+            block.put("attribute", attribute.getId());
         }
         block.put("args", args.toJSON());
         return block;

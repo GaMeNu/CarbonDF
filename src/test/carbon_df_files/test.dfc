@@ -1,15 +1,3 @@
-fun test(?in: num, *in2: num) -> (out: num, out2: num){
-    line res1: any = mult(in, in2);
-    line res2: num = mult(res1, 2);
-    return(res1, res2);
-}
-
-
 fun main() {
-    line x = 0;
-    if(equals(x, 0)){
-        x = 1;
-    } else {
-        x = 2;
-    }
+    final line x, y = 1;
 }

@@ -60,9 +60,10 @@ public class ObjectCollectorListener extends BaseCarbonListener{
     public void enterStartdef(CarbonDFParser.StartdefContext ctx) {
         super.enterStartdef(ctx);
         String name = ctx.def_name().getText();
+        Modifiers modifiers = Modifiers.generateModifiers(ctx);
         curParams = new ArgsTable();
         curType.setName(name);
-        curType.setHidden(ctx.vis_modifier() != null);
+        curType.setHidden(modifiers.isHidden());
         try {
             switch (((TerminalNode) ctx.def_keyword().getChild(0)).getSymbol().getType()) {
                 case FUNDEF_KEYWORD -> curType.setType(BlockType.FUNC);
@@ -71,7 +72,7 @@ public class ObjectCollectorListener extends BaseCarbonListener{
                 default -> throw new ParseCancellationException(new UnrecognizedTokenException(ctx.def_keyword().getText()));
             }
         } catch (UnknownEventException e){
-            throwError(e.getMessage(), ctx, CarbonTranspileException.class);
+            throwError(e.getMessage(), ctx.def_name(), CarbonTranspileException.class);
         }
 
         if (curType.getType() != BlockType.FUNC && curType.getType() != BlockType.PROCESS) return;
@@ -128,12 +129,24 @@ public class ObjectCollectorListener extends BaseCarbonListener{
         super.enterDef_param(ctx);
 
         FunctionParam newParam;
-        if (ctx.type_annotations() != null)
+        if (ctx.type_annotations() != null) {
             newParam = new FunctionParam(ctx.SAFE_TEXT().getText(),
                     new CodeArg(TranspileUtils.annotationToArgType(ctx.type_annotations()))
             );
-        else
+        }
+        else {
             newParam = new FunctionParam(ctx.SAFE_TEXT().getText(), new CodeArg(ArgType.ANY));
+        }
+
+        if (ctx.param_options() != null){
+            if (ctx.param_options().PARAM_PLURAL(0) != null){
+                newParam.setPlural(true);
+            }
+
+            if (ctx.param_options().PARAM_OPTIONAL(0) != null) {
+                newParam.setOptional(true);
+            }
+        }
 
         if (varTable.varExists(newParam.getName())) throwError("Variable \"" + newParam.getName() + "\" was redefined", ctx, CarbonTranspileException.class);
         curParams.addAtFirstNull(newParam);
