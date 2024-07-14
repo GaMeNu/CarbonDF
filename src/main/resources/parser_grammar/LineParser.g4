@@ -32,7 +32,7 @@ repeat_statement:
 
 repeat_type: SAFE_TEXT;
 
-fun_call: fun_call_chain? single_fun_call ;
+fun_call: fun_call_chain? (target OBJ_SPECIFY)? single_fun_call ;
 
 single_fun_call: SAFE_TEXT '(' call_params? ')';
 

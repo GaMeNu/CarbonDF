@@ -6,6 +6,7 @@ public enum ArgType implements CarbonTypeEnum {
     ANY("any"),
     PARAM("pn_el"),
     VAR("var"),
+    GAME_VALUE("g_val"),
 
     STRING("txt"),
     STYLED_TEXT("comp"),

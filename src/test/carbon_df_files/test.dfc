@@ -1,3 +1,8 @@
-fun main() {
-    final line x, y = 1;
+fun test(input: num) -> (res: num){
+   return(game.player_count);
+}
+
+fun main(){
+    line x = test(game.player_count);
+    everyone.sendMessage(x);
 }

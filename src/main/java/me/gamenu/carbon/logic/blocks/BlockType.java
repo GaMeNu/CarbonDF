@@ -10,6 +10,7 @@ public enum BlockType implements CarbonTypeEnum {
     CALL_FUNC("call_func", "CallFunction"),
     START_PROCESS("start_process", "StartProcess"),
     PLAYER_ACTION("player_action", "PlayerAction"),
+    ENTITY_ACTION("entity_action", "EntityAction"),
     SET_VARIABLE("set_var", "SetVariable"),
     IF_VARIABLE("if_var", "IfVariable"),
     IF_GAME("if_game", "IfGame"),

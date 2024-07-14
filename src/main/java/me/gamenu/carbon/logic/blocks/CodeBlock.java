@@ -97,4 +97,8 @@ public class CodeBlock implements toJSONObject {
         this.targetType = targetType;
         return this;
     }
+
+    public TargetType getTargetType() {
+        return targetType;
+    }
 }

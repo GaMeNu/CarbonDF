@@ -12,11 +12,31 @@ any_item: standalone_item | complex_item | var_name;
 standalone_item: simple_item;
 
 // very basic items.
-simple_item: number | simple_string | styled_text;
+simple_item: number | simple_string | styled_text | game_value;
+
+game_value: target OBJ_SPECIFY var_name;
 
 // Items that don't exist standalone in DF, and can only live in vars
 complex_item: list | dict;
 
+target: target_any | target_player | target_entity;
+
+target_any: TARGET_DEFAULT
+          | TARGET_SELECTION
+          | TARGET_KILLER
+          | TARGET_DAMAGER
+          | TARGET_SHOOTER
+          | TARGET_VICTIM
+          | TARGET_GAME
+          ;
+
+target_player: TARGET_ALL_PLAYERS
+             ;
+
+target_entity: TARGET_PROJECTILE
+             | TARGET_ALL_MOBS
+             | TARGET_LAST_SPAWNED_ENTITY
+             ;
 
 list:
  TA_LIST?

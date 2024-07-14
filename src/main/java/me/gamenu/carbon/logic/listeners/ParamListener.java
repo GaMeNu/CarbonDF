@@ -1,13 +1,13 @@
 package me.gamenu.carbon.logic.listeners;
 
-import me.gamenu.carbon.logic.args.ArgType;
-import me.gamenu.carbon.logic.args.CodeArg;
-import me.gamenu.carbon.logic.args.VarArg;
+import me.gamenu.carbon.logic.args.*;
 import me.gamenu.carbon.logic.blocks.BlockType;
 import me.gamenu.carbon.logic.compile.ProgramContext;
-import me.gamenu.carbon.logic.args.VarTable;
+import me.gamenu.carbon.logic.etc.TargetType;
 import me.gamenu.carbon.logic.exceptions.InvalidNameException;
 import me.gamenu.carbon.parser.CarbonDFParser;
+
+import static me.gamenu.carbon.logic.compile.TranspileUtils.targetToType;
 
 public class ParamListener extends BaseCarbonListener {
 
@@ -66,6 +66,13 @@ public class ParamListener extends BaseCarbonListener {
         if (simpleCtx.styled_text() != null){
             String stringString = simpleCtx.styled_text().getText();
             codeArg = new CodeArg(ArgType.STYLED_TEXT).setArgName(stringString.substring(1, stringString.length()-1));
+        }
+
+        if (simpleCtx.game_value() != null){
+            TargetType valTarget = targetToType(simpleCtx.game_value().target());
+            String valName = simpleCtx.game_value().var_name().getText();
+            GameValue.GameValueType gvType = GameValue.GameValueType.fromCodeName(valName);
+            codeArg = new GameValue(gvType, valTarget);
         }
     }
 }

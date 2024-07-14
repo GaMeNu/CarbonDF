@@ -67,7 +67,7 @@ public class Compile {
     public static void fromFile(String filepath){
         CarbonDFParser parser = fileToBaseParser(filepath);
         parser.removeErrorListeners();
-        parser.addErrorListener(ErrorListener.INSTANCE.setPrintStackTrace(false));
+        parser.addErrorListener(ErrorListener.INSTANCE.setPrintStackTrace(true));
 
         ProgramContext programContext = new ProgramContext().setParser(parser);
 

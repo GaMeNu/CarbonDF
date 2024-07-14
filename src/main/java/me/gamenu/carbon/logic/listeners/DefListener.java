@@ -6,6 +6,7 @@ import me.gamenu.carbon.logic.compile.ProgramContext;
 import me.gamenu.carbon.logic.compile.TranspileUtils;
 import me.gamenu.carbon.logic.args.VarTable;
 import me.gamenu.carbon.logic.exceptions.CarbonTranspileException;
+import me.gamenu.carbon.logic.exceptions.TypeException;
 import me.gamenu.carbon.logic.exceptions.UnknownEventException;
 import me.gamenu.carbon.logic.exceptions.UnrecognizedTokenException;
 import me.gamenu.carbon.parser.CarbonDFParser;
@@ -63,9 +64,9 @@ public class DefListener extends BaseCarbonListener {
         }
         if (modifiers.isLsCancel()){
             if (defBlock.getBlockType() != BlockType.EVENT_PLAYER && defBlock.getBlockType() != BlockType.EVENT_ENTITY)
-                throwError("Only cancelable events may have the lscancel modifier.", ctx.startdef().def_keyword(), CarbonTranspileException.class);
+                throwError("Only cancelable events may be marked as LS-CANCEL.", ctx.startdef().def_keyword(), CarbonTranspileException.class);
             else if (!defBlock.getActionType().isCancellable()){
-                throwError("Only cancelable events may have the lscancel modifier.", ctx.startdef().def_name(), CarbonTranspileException.class);
+                throwError("Only cancelable events may be marked as LS-CANCEL.", ctx.startdef().def_name(), CarbonTranspileException.class);
             } else {
                 defBlock.setAttribute(CodeBlock.Attribute.LS_CANCEL);
             }
@@ -143,6 +144,7 @@ public class DefListener extends BaseCarbonListener {
             varTable.putVar(
                     new VarArg(newParam.getName(), VarScope.LINE, false, newParam.getInternalArg())
             );
+            if (newParam.isPlural()) varTable.get(newParam.getName()).setValue(new CodeArg(ArgType.LIST));
         }
 
         defBlock.getArgs().extend(paramOutputBuffer);
@@ -208,16 +210,18 @@ public class DefListener extends BaseCarbonListener {
             }
 
             CodeArg defVal = standaloneToCodeArg(ctx.standalone_item());
-            if (newParam.getParamType() != defVal.getType()
-                    && newParam.getParamType() != ArgType.ANY)
-                throwError("Param type " + newParam.getParamType() + " does not match type of default value " + defVal.getType(), ctx.standalone_item(), CarbonTranspileException.class);
-
             if (newParam.getParamType() == ArgType.LIST
-            || newParam.getParamType() == ArgType.DICT
-            || newParam.getParamType() == ArgType.VAR)
-                if (newParam.getDefaultValue() != null)
-                    throwError("Parameter type does not support default values.", ctx, CarbonTranspileException.class);
-            
+                    || newParam.getParamType() == ArgType.DICT
+                    || newParam.getParamType() == ArgType.VAR)
+                throwError("Parameter type does not support default values.", ctx.standalone_item(), TypeException.class);
+
+            if (newParam.getParamType() != defVal.getType()
+                    && newParam.getParamType() != ArgType.ANY) {
+                throwError("Parameter type " + newParam.getParamType() + " does not match type of default value " + defVal.getType(), ctx.standalone_item(), TypeException.class);
+
+            }
+
+            newParam.setDefaultValue(defVal);
         }
         paramOutputBuffer.addAtFirstNull(newParam);
     }

@@ -1,6 +1,7 @@
 package me.gamenu.carbon.logic.compile;
 
 import me.gamenu.carbon.logic.args.ArgType;
+import me.gamenu.carbon.logic.etc.TargetType;
 import me.gamenu.carbon.logic.exceptions.UnknownSymbolException;
 import me.gamenu.carbon.parser.CarbonDFParser;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -38,6 +39,10 @@ public class TranspileUtils {
         if (ctx.list() != null) return ArgType.LIST;
         if (ctx.dict() != null) return ArgType.DICT;
         return null;
+    }
+
+    public static TargetType targetToType(CarbonDFParser.TargetContext ctx){
+        return TargetType.fromCodeName(ctx.getText());
     }
 
 }

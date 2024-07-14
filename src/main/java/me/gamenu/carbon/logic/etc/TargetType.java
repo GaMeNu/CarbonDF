@@ -2,7 +2,10 @@ package me.gamenu.carbon.logic.etc;
 
 public enum TargetType implements CarbonTypeEnum {
     SELECTION("Selection", "selection"),
-    DEFAULT("Default", "default");
+    DEFAULT("Default", "default"),
+    GAME("Default", "game"),
+    ALL_PLAYERS("AllPlayers", "everyone")
+    ;
 
 
     private final String id;

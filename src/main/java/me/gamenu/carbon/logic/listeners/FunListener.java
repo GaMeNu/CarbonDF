@@ -6,6 +6,7 @@ import me.gamenu.carbon.logic.compile.ProgramContext;
 import me.gamenu.carbon.logic.args.VarTable;
 import me.gamenu.carbon.logic.exceptions.CarbonTranspileException;
 import me.gamenu.carbon.logic.exceptions.InvalidNameException;
+import me.gamenu.carbon.logic.exceptions.TypeException;
 import me.gamenu.carbon.logic.exceptions.UnknownEnumValueException;
 import me.gamenu.carbon.parser.CarbonDFParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -16,6 +17,7 @@ import java.util.List;
 import static me.gamenu.carbon.logic.compile.TranspileUtils.*;
 
 public class FunListener extends BaseCarbonListener {
+
     VarTable varTable;
 
     ArgsTable funReturnVars;
@@ -45,9 +47,28 @@ public class FunListener extends BaseCarbonListener {
         enterSingle_fun_call(ctx.single_fun_call());
         if (!funReturnVars.getArgDataList().isEmpty())
             block.getArgs().insertExtend(funReturnVars);
+        if (ctx.target() != null){
+            if (blockType != BlockType.PLAYER_ACTION
+                    && blockType != BlockType.ENTITY_ACTION
+                    && blockType != BlockType.IF_PLAYER
+                    && blockType != BlockType.IF_ENTITY)
+                throwError("Block target unsupported for block type.", ctx.single_fun_call(), CarbonTranspileException.class);
+
+            if (ctx.target().target_any() == null) {
+
+                if (ctx.target().target_player() != null && (blockType != BlockType.PLAYER_ACTION && blockType != BlockType.IF_PLAYER))
+                    throwError("Block target unsupported for block type.", ctx.single_fun_call(), CarbonTranspileException.class);
+
+                if (ctx.target().target_entity() != null && (blockType != BlockType.ENTITY_ACTION && blockType != BlockType.IF_ENTITY))
+                    throwError("Block target unsupported for block type.", ctx.single_fun_call(), CarbonTranspileException.class);
+            }
+
+            block.setTargetType(targetToType(ctx.target()));
+            System.out.println("TARGET TYPE: "+block.getTargetType());
+
+        }
         blocksTable.add(block);
     }
-
 
     @Override
     public void enterFun_call_chain(CarbonDFParser.Fun_call_chainContext ctx) {
@@ -226,7 +247,7 @@ public class FunListener extends BaseCarbonListener {
         super.enterVar_define(ctx);
         VarScope scope = VarScope.fromCodeName(ctx.var_scope().getText());
         String varName;
-        ArgType type = null;
+        ArgType type;
         boolean isDynamic;
         boolean isConstant = ctx.CONSTANT_KEYWORD() != null;
 
@@ -279,6 +300,18 @@ public class FunListener extends BaseCarbonListener {
 
     }
 
+    private static boolean matchVarType(VarArg var, CodeArg val){
+        ArgType varType = var.getVarType();
+        if (val instanceof VarArg) val = ((VarArg) val).getValue();
+        if (var.isDynamic()) return true;
+        if (varType == ArgType.ANY) return true;
+        if (varType == val.getType()) return true;
+        if (val instanceof GameValue){
+            return varType == ((GameValue) val).getGvType().getReturnArg().getType();
+        }
+        return false;
+    }
+
     private void assignVars(ParserRuleContext ctx, List<CarbonDFParser.Var_nameContext> varNames, List<CarbonDFParser.Var_valueContext> varValues){
 
         if (varValues.size() == 1 && varValues.get(0).fun_call() != null) {
@@ -303,13 +336,13 @@ public class FunListener extends BaseCarbonListener {
 
             if (!varTable.varExists(varName))
                 throwError("Could not identify variable \"" + varName + "\", are you sure it is defined?", ctx, InvalidNameException.class);
-
-            if (valCtx.any_item().standalone_item() != null) {
-                assignStandalone(ctx, nameCtx, valCtx.any_item().standalone_item());
+            System.out.println(valCtx.getText());
+            if (valCtx.var_name() != null) {
+                assignVarName(ctx, nameCtx, valCtx.var_name());
             } else if (valCtx.any_item().complex_item() != null) {
                 assignComplex(ctx, nameCtx, valCtx.any_item().complex_item());
-            } else if (valCtx.var_name() != null) {
-                assignVarName(ctx, nameCtx, valCtx.var_name());
+            } else if (valCtx.any_item().standalone_item() != null) {
+                assignStandalone(ctx, nameCtx, valCtx.any_item().standalone_item());
             } else if (valCtx.fun_call() != null) {
                 throwError("You may only set the return values of one function call at a time", valCtx, CarbonTranspileException.class);
             } else {
@@ -325,10 +358,8 @@ public class FunListener extends BaseCarbonListener {
 
         VarArg varArg = varTable.get(varName);
 
-        if (varTable.getVarType(varName) != valArg.getType() &&
-                varTable.getVarType(varName) != ArgType.ANY &&
-                !varTable.get(varCtx.getText()).isDynamic())
-            throwError("Assigned type \"" + valArg.getType() + "\" does not match defined type \"" + varArg.getVarType() + "\" for statically-typed variable \"" + varArg.getName() + "\"", ctx, CarbonTranspileException.class);
+        if (!matchVarType(varTable.get(varCtx.getText()), valArg))
+            throwError("Assigned type \"" + valArg.getType() + "\" does not match defined type \"" + varArg.getVarType() + "\" for statically-typed variable \"" + varArg.getName() + "\"", ctx, TypeException.class);
 
         varArg.setValue(valArg);
         varTable.putVar(varTable.get(varArg.getName()).setValue(valArg));
@@ -338,6 +369,7 @@ public class FunListener extends BaseCarbonListener {
                 .addAtFirstNull(valArg);
         blocksTable.add(new CodeBlock(BlockType.SET_VARIABLE, ActionType.SIMPLE_ASSIGN).setArgs(resTable));
     }
+
 
     private void assignComplex(ParserRuleContext ctx, CarbonDFParser.Var_nameContext varCtx, CarbonDFParser.Complex_itemContext complexCtx) {
         String varName = varCtx.getText();
@@ -363,7 +395,7 @@ public class FunListener extends BaseCarbonListener {
             varTable.get(varName).setValue(new CodeArg(ArgType.DICT));
             newDict(ctx, varName, depth, itemCtx.dict());
         } else {
-            throwError("How did we get here...? (+10 points fro breaking the transpiler)", ctx, CarbonTranspileException.class);
+            throwError("How did we get here...? (+10 CDF points for breaking the transpiler)", ctx, CarbonTranspileException.class);
             return;
         }
 
@@ -502,10 +534,8 @@ public class FunListener extends BaseCarbonListener {
             return;
         }
 
-        if (var.getVarType() != val.getVarType()
-                && var.getVarType() != ArgType.ANY
-                && !var.isDynamic())
-            throwError("Assigned type \"" + val.getType() + "\" does not match defined type \"" + var.getVarType() + "\" for statically-typed variable \"" + var.getName() + "\"", ctx, CarbonTranspileException.class);
+        if (!matchVarType(var, val))
+            throwError("Assigned type \"" + val.getType() + "\" does not match defined type \"" + var.getVarType() + "\" for statically-typed variable \"" + var.getName() + "\"", ctx, TypeException.class);
 
         var.setValue(val.getValue());
 
@@ -565,7 +595,7 @@ public class FunListener extends BaseCarbonListener {
             if (!var.isDynamic()
                     && var.getVarType() != ArgType.ANY
                     && var.getVarType() != retType)
-                throwError(String.format("Assigned type %s does not match defined type %s for statically-typed variable %s", retType, var.getVarType(), var.getName()), nameCtx, CarbonTranspileException.class);
+                throwError(String.format("Assigned type %s does not match defined type %s for statically-typed variable %s", retType, var.getVarType(), var.getName()), nameCtx, TypeException.class);
 
             var.setValue(new CodeArg(retType));
 

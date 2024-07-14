@@ -11,6 +11,7 @@ DICT_CLOSE: '}';
 DICT_KEYVAL: ':';
 STRING_DEFINE_1: '"';
 STRING_DEFINE_2: '\'';
+OBJ_SPECIFY: '.';
 ARG_SEP: WHITESPACES? ',' WHITESPACES?;
 
 TA_ANY: 'any';
@@ -22,6 +23,20 @@ TA_VECT: 'vect';
 TA_LIST: 'list';
 TA_DICT: 'dict';
 TA_VAR: 'var';
+
+TARGET_DEFAULT: 'default';
+TARGET_SELECTION: 'selection';
+TARGET_KILLER: 'killer';
+TARGET_DAMAGER: 'damager';
+TARGET_SHOOTER: 'shooter';
+TARGET_VICTIM: 'victim';
+TARGET_PROJECTILE: 'projectile';
+TARGET_ALL_PLAYERS: 'everyone';
+TARGET_ALL_ENTITIES: 'everything';
+TARGET_ALL_MOBS: 'mobs';
+TARGET_LAST_SPAWNED_ENTITY: 'last_entity';
+TARGET_GAME: 'game';
+
 
 NUMBER: ('-' | '+')? DIGIT_SEQ ('.' DIGIT_SEQ)?;
 

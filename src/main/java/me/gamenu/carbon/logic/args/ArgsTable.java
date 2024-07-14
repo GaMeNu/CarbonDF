@@ -109,6 +109,9 @@ public class ArgsTable implements toJSONObject {
     }
 
     private static boolean matchSingleParam(CodeArg thisArg, FunctionParam toMatch) {
+        // Fix for Game Values:
+        if (thisArg instanceof GameValue) thisArg = ((GameValue) thisArg).getGvType().getReturnArg();
+
         ArgType thisType = thisArg.getType();
         ArgType paramType = toMatch.getParamType();
 
