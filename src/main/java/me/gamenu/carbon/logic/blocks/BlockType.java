@@ -12,14 +12,15 @@ public enum BlockType implements CarbonTypeEnum {
     PLAYER_ACTION("player_action", "PlayerAction"),
     ENTITY_ACTION("entity_action", "EntityAction"),
     SET_VARIABLE("set_var", "SetVariable"),
+    CONTROL("control", "Control"),
+    SELECT_OBJECT("select_obj", "SelectObject"),
     IF_VARIABLE("if_var", "IfVariable"),
     IF_GAME("if_game", "IfGame"),
     IF_PLAYER("if_player", "IfPlayer"),
     IF_ENTITY("if_entity", "IfEntity"),
     ELSE("else", "Else"),
     REPEAT("repeat","Repeat"),
-    BRACKET("bracket", null),
-    CONTROL("control", "Control")
+    BRACKET("bracket", null)
     ;
 
     private final String id;
@@ -35,6 +36,7 @@ public enum BlockType implements CarbonTypeEnum {
         return id;
     }
 
+
     public String getCodeName() {
         return codeName;
     }
@@ -42,6 +44,13 @@ public enum BlockType implements CarbonTypeEnum {
     public static BlockType fromCodeName(String codeName){
         for (BlockType bt : BlockType.values()) {
             if (bt.getCodeName().equals(codeName)) return bt;
+        }
+
+        return null;
+    }
+    public static BlockType fromID(String id){
+        for (BlockType bt : BlockType.values()) {
+            if (bt.getID().equals(id)) return bt;
         }
 
         return null;

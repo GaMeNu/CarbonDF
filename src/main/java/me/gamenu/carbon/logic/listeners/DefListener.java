@@ -195,7 +195,6 @@ public class DefListener extends BaseCarbonListener {
         if (varTable.varExists(newParam.getName())) throwError("Variable \"" + newParam.getName() + "\" was redefined", ctx, CarbonTranspileException.class);
 
         if (ctx.param_options() != null){
-            System.out.println(ctx.param_options().getText());
             if (ctx.param_options().PARAM_OPTIONAL(0) != null) {
                 newParam.setOptional(true);
             }
@@ -238,10 +237,12 @@ public class DefListener extends BaseCarbonListener {
     }
 
     private BlockTag getHiddenTag() {
+        ActionType at = ActionType.getMatchingDynamicAction(defBlock.getBlockType());
+        TagType hidden = TagType.getTagType(at, "IsHidden");
         if (!modifiers.isVisible()){
-            return new BlockTag("Is Hidden", BlockType.PROCESS, ActionType.DYNAMIC, "True");
+            return new BlockTag(BlockType.PROCESS, at, hidden, TagOption.getTagOption(hidden, "True"));
         } else {
-            return new BlockTag("Is Hidden", BlockType.PROCESS, ActionType.DYNAMIC, "False");
+            return new BlockTag(BlockType.PROCESS, at, hidden, TagOption.getTagOption(hidden, "False"));
         }
     }
 

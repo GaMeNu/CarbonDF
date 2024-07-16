@@ -32,9 +32,11 @@ repeat_statement:
 
 repeat_type: SAFE_TEXT;
 
-fun_call: fun_call_chain? (target OBJ_SPECIFY)? single_fun_call ;
+fun_call: fun_call_chain? (target OBJ_SPECIFY)? single_fun_call tags?;
 
 single_fun_call: SAFE_TEXT '(' call_params? ')';
+
+tags: WHITESPACES? dict WHITESPACES?;
 
 single_token_call: SAFE_TEXT;
 

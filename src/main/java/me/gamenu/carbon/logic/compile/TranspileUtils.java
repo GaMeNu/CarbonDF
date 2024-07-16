@@ -5,10 +5,40 @@ import me.gamenu.carbon.logic.etc.TargetType;
 import me.gamenu.carbon.logic.exceptions.UnknownSymbolException;
 import me.gamenu.carbon.parser.CarbonDFParser;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.HashMap;
+import java.util.Map;
 
 import static me.gamenu.carbon.parser.CarbonDFLexer.*;
 
 public class TranspileUtils {
+    public static final JSONObject DBC;
+    public static final Map<String, String> CBNameToIdentifier = new HashMap<>();
+
+    public static final int MAX_PARAMS = 27;
+
+    static {
+        try {
+            DBC = new JSONObject(new JSONTokener(new FileReader("src/main/resources/dbc/dbc.json")));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        JSONArray codeBlocks = DBC.getJSONArray("codeblocks");
+        for (Object o: codeBlocks){
+            JSONObject cb = (JSONObject) o;
+            String name = cb.getString("name");
+            String identifier = cb.getString("identifier");
+            CBNameToIdentifier.put(name, identifier);
+        }
+    }
+
+
     public static ArgType annotationToArgType(CarbonDFParser.Type_annotationsContext ctx) throws UnknownSymbolException {
         return switch (((TerminalNode) ctx.getChild(0)).getSymbol().getType()) {
             case TA_ANY -> ArgType.ANY;

@@ -30,6 +30,12 @@ public class CompoundListener extends BaseCarbonListener{
         CodeBlock resBlock = blocksTable.get(blocksTable.list().size()-1);
 
         if (ctx.IFNT_KEYWORD() != null){
+            throwError("Alright I know that IFN'T is valid syntax, " +
+                    "but please don't ACTUALLY use it, it'll hurt code readability (You do get +10 CDF points tho)",
+                    ctx,
+                    CarbonTranspileException.class,
+                    CarbonTranspileException.Severity.WARN
+            );
             resBlock.setAttribute(CodeBlock.Attribute.NOT);
         }
 
@@ -77,7 +83,7 @@ public class CompoundListener extends BaseCarbonListener{
 
         if (ctx.NOT_KEYWORD() != null && rt != ActionType.REPEAT_WHILE) throwError("NOT keyword in repeat only applies to the WHILE action.", ctx, CarbonTranspileException.class);
 
-        RepeatBlock repeatBlock = new RepeatBlock(rt);
+        CodeBlock repeatBlock = new CodeBlock(BlockType.REPEAT, rt);
 
         CarbonDFParser.Call_paramsContext paramsCtx;
 
@@ -105,7 +111,7 @@ public class CompoundListener extends BaseCarbonListener{
 
     }
 
-    private RepeatBlock repeatWhileCase(CarbonDFParser.Repeat_statementContext ctx, RepeatBlock repeatBlock) {
+    private CodeBlock repeatWhileCase(CarbonDFParser.Repeat_statementContext ctx, CodeBlock repeatBlock) {
         if (ctx.NOT_KEYWORD() != null) repeatBlock.setAttribute(CodeBlock.Attribute.NOT);
         if (ctx.fun_call() == null) {
             throwError("Repeat-while action requires a function call.", ctx, CarbonTranspileException.class);

@@ -2,7 +2,13 @@ fun test(input: num) -> (res: num){
    return(game.player_count);
 }
 
+extern proc comment();
+
 fun main(){
     line x = test(game.player_count);
-    everyone.sendMessage(x);
+    everyone.sendMessage(x){"AlignmentMode": "Centered", "TextValueMerging": "NoSpaces"};
+
+    if not equals(x, 10){
+        sendMessage("Dingus");
+    }
 }

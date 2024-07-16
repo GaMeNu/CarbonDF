@@ -12,7 +12,9 @@ import me.gamenu.carbon.parser.CarbonDFParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static me.gamenu.carbon.logic.compile.TranspileUtils.*;
 
@@ -28,6 +30,8 @@ public class FunListener extends BaseCarbonListener {
     BlockType blockType;
     BlockType requestedBlocktype;
     ActionType actionType;
+
+    ArgsTable blockTags;
 
     public FunListener(ProgramContext programContext) {
         super(programContext);
@@ -64,9 +68,26 @@ public class FunListener extends BaseCarbonListener {
             }
 
             block.setTargetType(targetToType(ctx.target()));
-            System.out.println("TARGET TYPE: "+block.getTargetType());
 
         }
+
+        if (ctx.tags() != null)
+            enterTags(ctx.tags());
+
+        int argsLen = block.getArgs().getArgDataList().size();
+        int tagsLen = blockTags.getArgDataList().size();
+
+        if (argsLen + tagsLen > MAX_PARAMS){
+            throwError("Too many function params", ctx.single_fun_call().call_params(), CarbonTranspileException.class);
+        }
+
+        int blockTagsIndex = 0;
+
+        for (int i = (MAX_PARAMS - tagsLen); i < MAX_PARAMS; i++) {
+            block.getArgs().add(i, blockTags.get(blockTagsIndex));
+            blockTagsIndex += 1;
+        }
+
         blocksTable.add(block);
     }
 
@@ -84,22 +105,36 @@ public class FunListener extends BaseCarbonListener {
     public void enterSingle_fun_call(CarbonDFParser.Single_fun_callContext ctx) {
         super.enterSingle_fun_call(ctx);
         String actionName = ctx.SAFE_TEXT().getText();
+        blockTags = new ArgsTable();
+
         actionType = ActionType.fromCodeName(actionName);
+
         if (actionType != null)
             handleBasicAction(ctx);
         else if (programContext.getFunTable().get(actionName) != null)
             handleDefinitionCall(ctx, actionName);
         else
             throwError("Could not identify action/call \""+actionName+"\"", ctx, UnknownEnumValueException.class);
+
         if (ctx.call_params() != null)
             enterCall_params(ctx.call_params());
+
     }
 
     private void handleBasicAction(CarbonDFParser.Single_fun_callContext ctx) {
-        if (requestedBlocktype != null && actionType.getBlock() != requestedBlocktype)
+
+        // Check if user didn't fuck up explicit BlockType::
+        if (requestedBlocktype != null && actionType.getBlock() != requestedBlocktype) {
             throwError(String.format("Called action \"%s\" of block type \"%s\", but requested action is of block type \"%s\"", actionType.getCodeName(), actionType.getBlock().getCodeName(), requestedBlocktype.getCodeName()), ctx, InvalidNameException.class);
+        }
 
         blockType = actionType.getBlock();
+
+        for (Map.Entry<String, TagType> entry: TagType.getTypeMap().get(actionType).entrySet()){
+            TagType tagType = entry.getValue();
+            blockTags.addAtFirstNull(new BlockTag(blockType, actionType, tagType, tagType.getDefaultOption()));
+        }
+
 
         if (blockType == BlockType.SET_VARIABLE && funReturnVars.getArgDataList().isEmpty())
             throwError("It is generally recommended to avoid using SetVariable blocks as normal calls, as it bypasses strong typing and is untested behavior", ctx, CarbonTranspileException.class, CarbonTranspileException.Severity.WARN);
@@ -107,7 +142,60 @@ public class FunListener extends BaseCarbonListener {
         if (ActionType.getBaseFunsReturns().containsKey(actionType.getCodeName()) && funReturnVars.getArgDataList().isEmpty())
             throwError("Function returns " + ActionType.getBaseFunsReturns().get(actionType.getCodeName()).getArgDataList().size() + " value(s) but no variables were given (use the '_' variable to ignore the result)", ctx, CarbonTranspileException.class);
 
+
         block = new CodeBlock(blockType, actionType);
+    }
+
+    @Override
+    public void enterTags(CarbonDFParser.TagsContext ctx) {
+        super.enterTags(ctx);
+        if (ctx == null) return;
+
+        if (blockType == BlockType.CALL_FUNC)
+            throwError("Tags are not supported for this codeblock", ctx, CarbonTranspileException.class);
+
+        CarbonDFParser.DictContext dictCtx = ctx.dict();
+
+        Map<TagType, BlockTag> newBTs = new HashMap<>();
+
+        for (CarbonDFParser.Dict_pairContext dictPairCtx: dictCtx.dict_pair()){
+            CarbonDFParser.Any_itemContext anyItemCtx = dictPairCtx.any_item();
+            if (anyItemCtx.standalone_item() == null || standaloneToArgType(anyItemCtx.standalone_item()) != ArgType.STRING){
+                throwError("You may only use STRINGs in tag dictionaries", ctx, CarbonTranspileException.class);
+                return;
+            }
+
+            CarbonDFParser.Simple_stringContext keyStrCtx = dictPairCtx.key().simple_string();
+            String tagName = keyStrCtx.getText().substring(1, keyStrCtx.getText().length()-1);
+            CarbonDFParser.Simple_stringContext strCtx = anyItemCtx.standalone_item().simple_item().simple_string();
+            String tagVal = strCtx.getText().substring(1, strCtx.getText().length()-1);
+
+            TagType tagType = TagType.getTagType(actionType, tagName);
+            if (tagType == null) {
+                throwError(String.format("Invalid tag name %s for CodeAction %s", tagName, actionType), keyStrCtx, CarbonTranspileException.class);
+                continue;
+            }
+
+            TagOption tagOption = tagType.getOption(tagVal);
+
+            if (tagOption == null) {
+                throwError(String.format("Invalid tag option %s for Tag Type %s", tagVal, tagName), strCtx, CarbonTranspileException.class);
+                continue;
+            }
+
+            newBTs.put(tagType, new BlockTag(blockType, actionType, tagType, tagOption));
+        }
+
+        // This is some stupid attempt at optimization
+        // (we just iterate through the loop once, O(n) instead of O(n^2))
+        ArrayList<CodeArg> argDataList = blockTags.getArgDataList();
+        for (int i = 0; i < argDataList.size(); i++) {
+            CodeArg arg = argDataList.get(i);
+            BlockTag curTag = (BlockTag) arg;
+
+            BlockTag newTag = newBTs.get(curTag.getTagType());
+            if (newTag != null) blockTags.set(i, newTag);
+        }
     }
 
     private void handleDefinitionCall(CarbonDFParser.Single_fun_callContext ctx, String callName) {
@@ -117,16 +205,28 @@ public class FunListener extends BaseCarbonListener {
             case PROCESS -> blockType = BlockType.START_PROCESS;
             default -> throwError("Invalid Block Type "+callType.getType()+" for call name \""+callName+"\" found in fun table.", ctx, CarbonTranspileException.class);
         }
-        if (callType.getReturns().getArgDataList().size() != funReturnVars.getArgDataList().size())
+
+        if (callType.getReturns() != null && callType.getReturns().getArgDataList().size() != funReturnVars.getArgDataList().size())
             throwError("Function returns " + callType.getReturns().getArgDataList().size() + " value(s) but " + funReturnVars.getArgDataList().size() + " variables were given (use the '_' variable to ignore the result)", ctx, CarbonTranspileException.class);
+        else if (callType.getReturns() == null && !funReturnVars.getArgDataList().isEmpty()){
+            throwError("Function returns " + 0 + " value(s) but " + funReturnVars.getArgDataList().size() + " variables were given (use the '_' variable to ignore the result)", ctx, CarbonTranspileException.class);
+        }
 
         block = new DefinitionBlock(blockType, null, callName);
 
-        FunTable.FunType funType = programContext.getFunTable().get(callName);
-
-        if (!funType.getParams().getArgDataList().isEmpty() && ctx.call_params() == null) {
-            throwError("Recieved incorrect amount of parameters (expected " + funType.getParams().getArgDataList().size() + ", recieved 0)", ctx, CarbonTranspileException.class);
+        ActionType at = ActionType.getMatchingDynamicAction(blockType);
+        for (Map.Entry<String, TagType> entry: TagType.getTypeMap().get(at).entrySet()){
+            TagType tagType = entry.getValue();
+            blockTags.addAtFirstNull(new BlockTag(blockType, at, tagType, tagType.getDefaultOption()));
         }
+
+        if (callType.getParams() != null && !callType.getParams().getArgDataList().isEmpty() && ctx.call_params() == null) {
+            throwError("Recieved incorrect amount of parameters (expected " + callType.getParams().getArgDataList().size() + ", recieved 0)", ctx, CarbonTranspileException.class);
+        }
+
+
+
+
 
     }
 
@@ -336,7 +436,7 @@ public class FunListener extends BaseCarbonListener {
 
             if (!varTable.varExists(varName))
                 throwError("Could not identify variable \"" + varName + "\", are you sure it is defined?", ctx, InvalidNameException.class);
-            System.out.println(valCtx.getText());
+
             if (valCtx.var_name() != null) {
                 assignVarName(ctx, nameCtx, valCtx.var_name());
             } else if (valCtx.any_item().complex_item() != null) {
@@ -575,8 +675,6 @@ public class FunListener extends BaseCarbonListener {
             CarbonDFParser.Var_nameContext nameCtx = nameCtxLs.get(i);
             varName = nameCtx.getText();
 
-            System.out.println(varName);
-
             if (!varTable.varExists(varName)) {
                 throwError("Could not identify variable \"" + varName + "\", are you sure it is defined?", ctx, InvalidNameException.class);
                 return;
@@ -599,9 +697,7 @@ public class FunListener extends BaseCarbonListener {
 
             var.setValue(new CodeArg(retType));
 
-            System.out.println(varTable.get(varName));
             resTable.addAtFirstNull(varTable.get(varName));
-            System.out.println(resTable.getArgDataList());
 
         }
 

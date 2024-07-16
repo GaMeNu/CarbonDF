@@ -27,6 +27,7 @@ public class CodeBlock implements toJSONObject {
     ArgsTable args;
 
     Attribute attribute;
+    ActionType subAction;
 
 
     public CodeBlock(BlockType blockType, ActionType actionType){
@@ -79,6 +80,8 @@ public class CodeBlock implements toJSONObject {
         if (attribute != null){
             block.put("attribute", attribute.getId());
         }
+        if (subAction != null)
+            block.put("subAction", subAction.getID());
         block.put("args", args.toJSON());
         return block;
     }
@@ -100,5 +103,14 @@ public class CodeBlock implements toJSONObject {
 
     public TargetType getTargetType() {
         return targetType;
+    }
+
+    public CodeBlock setSubAction(ActionType subAction) {
+        this.subAction = subAction;
+        return this;
+    }
+
+    public ActionType getSubAction() {
+        return subAction;
     }
 }

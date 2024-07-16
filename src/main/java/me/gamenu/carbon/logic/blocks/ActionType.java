@@ -11,15 +11,19 @@ public enum ActionType {
     EVENT_JOIN("Join", "Join", BlockType.EVENT_PLAYER),
     EVENT_LEFT_CLICK("LeftClick", "LeftClick", BlockType.EVENT_PLAYER, true),
     EVENT_ENTITY_DAMAGE_ENTITY("EntityDmgEntity", "EntityDmgEntity", BlockType.EVENT_ENTITY),
-    DYNAMIC("dynamic","null", null),
+    DYNAMIC_FUNC("dynamic", null, BlockType.FUNC),
+    DYNAMIC_CALL_FUNC("dynamic", null, BlockType.CALL_FUNC),
+    DYNAMIC_PROC("dynamic",null, BlockType.PROCESS),
+    DYNAMIC_START_PROC("dynamic", null, BlockType.START_PROCESS),
     SEND_MESSAGE("SendMessage", "sendMessage", BlockType.PLAYER_ACTION),
     SIMPLE_ASSIGN("=", "assign", BlockType.SET_VARIABLE),
     CREATE_LIST("CreateList", "createList", BlockType.SET_VARIABLE),
     CREATE_DICT("CreateDict", "createDict", BlockType.SET_VARIABLE),
-    ADD_NUMBERS("+", "btw add", BlockType.SET_VARIABLE),
+    ADD_NUMBERS("+", "add", BlockType.SET_VARIABLE),
     SUBTRACT_NUMBERS("-", "sub", BlockType.SET_VARIABLE),
     MULTIPLY_NUMBERS("x", "mult", BlockType.SET_VARIABLE),
     DIVIDE_NUMBERS("/", "div", BlockType.SET_VARIABLE),
+    SELECT_RANDOM_PLAYER("RandomPlayer", "randomPlayer", BlockType.SELECT_OBJECT),
     IF_EQUALS("=", "equals", BlockType.IF_VARIABLE),
     REPEAT_FOREVER("Forever", "forever", BlockType.REPEAT),
     REPEAT_WHILE("While", "while", BlockType.REPEAT),
@@ -69,6 +73,13 @@ public enum ActionType {
         }
         return null;
     }
+    public static ActionType fromID(String id, BlockType bt) {
+        for (ActionType at : ActionType.values()) {
+            if (at.getID() == null) continue;
+            if (at.getID().equals(id) && at.getBlock() == bt) return at;
+        }
+        return null;
+    }
 
     public BlockType getBlock() {
         return blockType;
@@ -78,6 +89,19 @@ public enum ActionType {
         // We ASSUME that future maintainers aren't dumb
         // and understand that IDs are *UNIQUE*
         return this.id.equals(other.id);
+    }
+
+    /**
+     * This here bc am dumb.
+     * @param type
+     * @return
+     */
+    public static ActionType getMatchingDynamicAction(BlockType type){
+        for (ActionType at: ActionType.values()) {
+            if (at.getID() == null || at.getBlock() == null) continue;
+            if (at.getID().equals("dynamic") && at.getBlock().equals(type)) return at;
+        }
+        return null;
     }
 
     public boolean isCancellable() {

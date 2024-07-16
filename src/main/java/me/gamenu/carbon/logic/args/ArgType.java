@@ -11,6 +11,7 @@ public enum ArgType implements CarbonTypeEnum {
     STRING("txt"),
     STYLED_TEXT("comp"),
     NUM("num"),
+    VECTOR("vec"),
 
     LIST("list"),
     DICT("dict"),
