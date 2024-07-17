@@ -11,10 +11,7 @@ import me.gamenu.carbon.logic.exceptions.UnknownEnumValueException;
 import me.gamenu.carbon.parser.CarbonDFParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static me.gamenu.carbon.logic.compile.TranspileUtils.*;
 
@@ -198,6 +195,11 @@ public class FunListener extends BaseCarbonListener {
         }
     }
 
+    /*
+     * RULES FOR PARAMS:
+     * 1. Optional parameters must come after ALL required ones.
+     * 2. Plural parameters must come after ALL singular ones.
+     */
     private void handleDefinitionCall(CarbonDFParser.Single_fun_callContext ctx, String callName) {
         FunTable.FunType callType = programContext.getFunTable().get(callName);
         switch (callType.getType()){
@@ -220,13 +222,21 @@ public class FunListener extends BaseCarbonListener {
             blockTags.addAtFirstNull(new BlockTag(blockType, at, tagType, tagType.getDefaultOption()));
         }
 
-        if (callType.getParams() != null && !callType.getParams().getArgDataList().isEmpty() && ctx.call_params() == null) {
-            throwError("Recieved incorrect amount of parameters (expected " + callType.getParams().getArgDataList().size() + ", recieved 0)", ctx, CarbonTranspileException.class);
+        // Check params
+        int minParams = 0;
+        int maxParams = 0;
+        if (callType.getParams() != null && !callType.getParams().getArgDataList().isEmpty()) {
+            for (CodeArg arg: callType.getParams().getArgDataList()) {
+                FunctionParam param = (FunctionParam) arg;
+                if (maxParams != Integer.MAX_VALUE) maxParams++;
+                if (!param.isOptional()) minParams++;
+                if (param.isPlural()) maxParams = Integer.MAX_VALUE;
+            }
         }
 
-
-
-
+        if (callType.getParams() != null && !callType.getParams().getArgDataList().isEmpty() && ctx.call_params() == null && minParams > 0) {
+            throwError("Recieved incorrect amount of parameters (expected " + minParams + "-" + maxParams + ", recieved 0)", ctx, CarbonTranspileException.class);
+        }
 
     }
 
@@ -237,9 +247,22 @@ public class FunListener extends BaseCarbonListener {
 
         if (blockType == BlockType.CALL_FUNC){
             FunTable.FunType funType = programContext.getFunTable().get(((DefinitionBlock)block).getName());
+            // Check params
+            int minParams = 0;
+            int maxParams = 0;
+            if (funType.getParams() != null && !funType.getParams().getArgDataList().isEmpty()) {
+                for (CodeArg arg: funType.getParams().getArgDataList()) {
+                    FunctionParam param = (FunctionParam) arg;
+                    if (maxParams != Integer.MAX_VALUE) maxParams++;
+                    if (!param.isOptional()) minParams++;
+                    if (param.isPlural()) maxParams = Integer.MAX_VALUE;
+                }
+            }
 
-            if (funType.getParams().getArgDataList().size() != ctx.call_param().size()) {
-                throwError("Recieved incorrect amount of parameters (expected " + funType.getParams().getArgDataList().size() + ", recieved " + ctx.call_param().size() + ")", ctx, CarbonTranspileException.class);
+            int providedParams = ctx.call_param().size();
+
+            if (!(providedParams <= maxParams && providedParams >= minParams)) {
+                throwError("Recieved incorrect amount of parameters (expected " + minParams + "-" + maxParams + ", recieved " + ctx.call_param().size() + ")", ctx, CarbonTranspileException.class);
             }
         }
 
@@ -299,7 +322,21 @@ public class FunListener extends BaseCarbonListener {
             FunctionParam retParam = (FunctionParam) currentFun.getReturns().get(i);
             CodeArg resArg = newArgsTable.getArgDataList().get(i);
 
-            VarArg retVar = (VarArg) retParam.getInternalArg();
+            VarArg retVar = varTable.get(retParam.getName());
+
+            if (resArg.getType() == ArgType.VAR)
+                System.out.println(((VarArg) resArg).getName());
+            else System.out.println(resArg.getType());
+
+            // Check whether a player is attempting to return a return variable.
+            if (resArg.getType() == ArgType.VAR){
+                for (CodeArg ret : currentFun.getReturns().getArgDataList()) {
+                    FunctionParam curRet = (FunctionParam) ret;
+                    if (curRet.getName().equals(((VarArg)resArg).getName()))
+                        throwError("Attempted returning a return variable", ctx.call_param(i), CarbonTranspileException.class);
+                }
+            }
+
 
             blocksTable.add(new CodeBlock(BlockType.SET_VARIABLE, ActionType.SIMPLE_ASSIGN).setArgs(
                     new ArgsTable()
@@ -321,10 +358,10 @@ public class FunListener extends BaseCarbonListener {
             if (match >= 0)
                 if (block.getArgs().get(match).getType() == ArgType.VAR)
                     throwError(String.format("Variable type %s does not match param type %s", ((VarArg) block.getArgs().get(match)).getVarType(), ((FunctionParam) paramTable.get(match)).getParamType()),
-                            ctx.call_param(match), CarbonTranspileException.class);
+                            ctx.call_param(match), TypeException.class);
                 else
                     throwError(String.format("Value type %s does not match param type %s", (block.getArgs().get(match)).getType(), ((FunctionParam) paramTable.get(match)).getParamType()),
-                            ctx.call_param(match), CarbonTranspileException.class);
+                            ctx.call_param(match), TypeException.class);
         }
     }
 
@@ -630,12 +667,12 @@ public class FunListener extends BaseCarbonListener {
         VarArg val = varTable.get(valName);
 
         if (val == null) {
-            throwError("Could not identify \"" + valName + "\", are you sure it is defined?", ctx, InvalidNameException.class);
+            throwError("Could not identify \"" + valName + "\", are you sure it is defined?", valCtx, InvalidNameException.class);
             return;
         }
 
         if (!matchVarType(var, val))
-            throwError("Assigned type \"" + val.getType() + "\" does not match defined type \"" + var.getVarType() + "\" for statically-typed variable \"" + var.getName() + "\"", ctx, TypeException.class);
+            throwError("Assigned type \"" + val.getVarType() + "\" does not match defined type \"" + var.getVarType() + "\" for statically-typed variable \"" + var.getName() + "\"", ctx, TypeException.class);
 
         var.setValue(val.getValue());
 

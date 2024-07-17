@@ -250,9 +250,14 @@ public class DefListener extends BaseCarbonListener {
     public void enterDefblock(CarbonDFParser.DefblockContext ctx) {
         super.enterDefblock(ctx);
         SingleLineListener singleLineListener = new SingleLineListener(programContext);
+
+        int lineCnt = 0;
         for (CarbonDFParser.Single_lineContext lineCtx : ctx.single_line()) {
             lineCtx.enterRule(singleLineListener);
+            if (lineCtx.comment() == null) lineCnt++;
         }
+
+        if (lineCnt == 0) throwError("Definition has an empty body", ctx, CarbonTranspileException.class, CarbonTranspileException.Severity.WARN);
     }
 
     // This is duped from FunListener#standaloneToCodeArg because I'm lazy

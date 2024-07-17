@@ -11,10 +11,14 @@ public enum ArgType implements CarbonTypeEnum {
     STRING("txt"),
     STYLED_TEXT("comp"),
     NUM("num"),
+
     VECTOR("vec"),
+    LOCATION("loc"),
 
     LIST("list"),
     DICT("dict"),
+
+    ITEM("item"),
 
     HINT("hint"),
     TAG("bl_tag");

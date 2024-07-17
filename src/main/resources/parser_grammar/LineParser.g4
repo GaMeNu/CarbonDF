@@ -34,14 +34,13 @@ repeat_type: SAFE_TEXT;
 
 fun_call: fun_call_chain? (target OBJ_SPECIFY)? single_fun_call tags?;
 
-single_fun_call: SAFE_TEXT '(' call_params? ')';
-
 tags: WHITESPACES? dict WHITESPACES?;
 
 single_token_call: SAFE_TEXT;
 
 fun_call_chain: ((single_token_call) CLASS_CALL_DIV);
 
+single_fun_call: SAFE_TEXT PAR_OPEN call_params? PAR_CLOSE;
 
 call_params
  : call_param

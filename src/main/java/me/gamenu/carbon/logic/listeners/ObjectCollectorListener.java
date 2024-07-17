@@ -6,11 +6,14 @@ import me.gamenu.carbon.logic.blocks.EventBlock;
 import me.gamenu.carbon.logic.compile.ProgramContext;
 import me.gamenu.carbon.logic.compile.TranspileUtils;
 import me.gamenu.carbon.logic.exceptions.CarbonTranspileException;
+import me.gamenu.carbon.logic.exceptions.ParamAmbiguityException;
 import me.gamenu.carbon.logic.exceptions.UnknownEventException;
 import me.gamenu.carbon.logic.exceptions.UnrecognizedTokenException;
 import me.gamenu.carbon.parser.CarbonDFParser;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
+
+import java.util.ArrayList;
 
 import static me.gamenu.carbon.parser.CarbonDFParser.*;
 
@@ -23,6 +26,7 @@ public class ObjectCollectorListener extends BaseCarbonListener{
     FunTable.FunType curType;
 
     ArgsTable curParams;
+    boolean ret;
 
     public ObjectCollectorListener(ProgramContext programContext) {
         super(programContext);
@@ -62,6 +66,7 @@ public class ObjectCollectorListener extends BaseCarbonListener{
         String name = ctx.def_name().getText();
         Modifiers modifiers = Modifiers.generateModifiers(ctx);
         curParams = new ArgsTable();
+        curType = new FunTable.FunType();
         curType.setName(name);
         curType.setHidden(modifiers.isHidden());
         try {
@@ -80,9 +85,23 @@ public class ObjectCollectorListener extends BaseCarbonListener{
 
 
             enterDef_params(ctx.def_params());
+            ArrayList<CodeArg> argDataList = curParams.getArgDataList();
+            for (int i = 1; i < argDataList.size(); i++) {
+                FunctionParam param = (FunctionParam) argDataList.get(i);
+                FunctionParam prevParam = (FunctionParam) argDataList.get(i-1);
+                if (prevParam.isOptional() && !param.isOptional())
+                    throwError("Required parameter after optional parameter", ctx.def_params().def_param(i), ParamAmbiguityException.class);
+
+                if (prevParam.isPlural() && prevParam.getParamType() == param.getParamType())
+                    throwError("Parameter after plural parameter of the same type", ctx.def_params().def_param(i), ParamAmbiguityException.class);
+
+            }
 
             curType.setParams(curParams);
 
+            if (ctx.ret_params() == null) return;
+
+            curParams = new ArgsTable();
             enterRet_params(ctx.ret_params());
 
             if (curParams == null) return;
@@ -104,6 +123,7 @@ public class ObjectCollectorListener extends BaseCarbonListener{
     public void enterDef_params(Def_paramsContext ctx) {
         super.enterDef_params(ctx);
         if (ctx ==  null) return;
+        ret = false;
 
         curParams = new ArgsTable();
 
@@ -116,6 +136,7 @@ public class ObjectCollectorListener extends BaseCarbonListener{
     public void enterRet_params(Ret_paramsContext ctx) {
         super.enterRet_params(ctx);
         if (ctx == null) return;
+        ret = true;
 
         curParams = new ArgsTable();
 
@@ -139,6 +160,10 @@ public class ObjectCollectorListener extends BaseCarbonListener{
         }
 
         if (ctx.param_options() != null){
+            if (ret){
+                throwError("Return variables cannot be optional or plural", ctx.param_options(), CarbonTranspileException.class);
+                return;
+            }
             if (ctx.param_options().PARAM_PLURAL(0) != null){
                 newParam.setPlural(true);
             }

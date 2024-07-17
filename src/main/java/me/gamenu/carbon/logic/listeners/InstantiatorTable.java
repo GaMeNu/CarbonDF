@@ -1,9 +1,14 @@
 package me.gamenu.carbon.logic.listeners;
 
+import me.gamenu.carbon.logic.args.ArgType;
 import me.gamenu.carbon.logic.args.ArgsTable;
 import me.gamenu.carbon.logic.args.CodeArg;
-import me.gamenu.carbon.parser.CarbonDFParser;
+import me.gamenu.carbon.logic.args.FunctionParam;
+import org.json.JSONObject;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -14,17 +19,17 @@ import java.util.function.Function;
  */
 public class InstantiatorTable {
 
-    public class InstantiatorType {
+    public static class InstantiatorType {
         String name;
-        ArgsTable params;
-        ArgsTable returns;
-        Function<CarbonDFParser.Fun_callContext, CodeArg> fn;
+        ArgType type;
+        ArrayList<ArgsTable> paramOptions;
+        ArrayList<Function<ArgsTable, CodeArg>> argSetters;
 
-        public InstantiatorType(String name, ArgsTable params, ArgsTable returns, Function<CarbonDFParser.Fun_callContext, CodeArg> fn) {
+        public InstantiatorType(String name, ArgType type, ArrayList<ArgsTable> paramOptions, ArrayList<Function<ArgsTable, CodeArg>> argSetters) {
             this.name = name;
-            this.params = params;
-            this.returns = returns;
-            this.fn = fn;
+            this.type = type;
+            this.paramOptions = paramOptions;
+            this.argSetters = argSetters;
         }
 
         public String getName() {
@@ -36,38 +41,117 @@ public class InstantiatorTable {
             return this;
         }
 
-        public ArgsTable getParams() {
-            return params;
+        public ArgType getType() {
+            return type;
         }
 
-        public InstantiatorType setParams(ArgsTable params) {
-            this.params = params;
+        public InstantiatorType setType(ArgType type) {
+            this.type = type;
             return this;
         }
 
-        public ArgsTable getReturns() {
-            return returns;
+        public ArrayList<ArgsTable> getParamOptions() {
+            return paramOptions;
         }
 
-        public InstantiatorType setReturns(ArgsTable returns) {
-            this.returns = returns;
+        public InstantiatorType setParamOptions(ArrayList<ArgsTable> paramOptions) {
+            this.paramOptions = paramOptions;
             return this;
         }
 
-        public Function<CarbonDFParser.Fun_callContext, CodeArg> getFn() {
-            return fn;
+        public ArgsTable getDefaultParams(){
+            return paramOptions.get(0);
         }
 
-        public InstantiatorType setFn(Function<CarbonDFParser.Fun_callContext, CodeArg> fn) {
-            this.fn = fn;
-            return this;
+        public Function<ArgsTable, CodeArg> getArgSetter(int index) {
+            return argSetters.get(index);
         }
     }
-    public static Map<String, Function<CarbonDFParser.Fun_callContext, CodeArg>> instantiatorMap = new HashMap<>(){{
+    private static final Map<String, InstantiatorType> instantiatorMap = new HashMap<>(){{
+        ArrayList<ArgsTable> paramsLs;
+        ArrayList<Function<ArgsTable, CodeArg>> argSetters;
+
+        paramsLs = new ArrayList<>();
+        argSetters = new ArrayList<>();
+        paramsLs.add(new ArgsTable()
+                .addAtFirstNull(new FunctionParam("x", new CodeArg(ArgType.NUM)))
+                .addAtFirstNull(new FunctionParam("y", new CodeArg(ArgType.NUM)))
+                .addAtFirstNull(new FunctionParam("z", new CodeArg(ArgType.NUM)))
+        );
+        argSetters.add(argsTable -> {
+            CodeArg res = new CodeArg(ArgType.VECTOR);
+
+            res.putData("x", numArgToActualNum(argsTable.get(0)));
+            res.putData("y", numArgToActualNum(argsTable.get(1)));
+            res.putData("z", numArgToActualNum(argsTable.get(2)));
+            return res;
+        });
+        put("vec", new InstantiatorType("vec", ArgType.VECTOR, paramsLs, argSetters));
+
+        paramsLs = new ArrayList<>();
+        argSetters = new ArrayList<>();
+        paramsLs.add(new ArgsTable()
+                .addAtFirstNull(new FunctionParam("x", new CodeArg(ArgType.NUM)))
+                .addAtFirstNull(new FunctionParam("y", new CodeArg(ArgType.NUM)))
+                .addAtFirstNull(new FunctionParam("z", new CodeArg(ArgType.NUM)))
+                .addAtFirstNull(new FunctionParam("pitch", new CodeArg(ArgType.NUM)))
+                .addAtFirstNull(new FunctionParam("yaw", new CodeArg(ArgType.NUM)))
+        );
+        argSetters.add(argsTable -> {
+            CodeArg res = new CodeArg(ArgType.LOCATION);
+
+            JSONObject loc = new JSONObject()
+                    .put("x", numArgToActualNum(argsTable.get(0)))
+                    .put("y", numArgToActualNum(argsTable.get(1)))
+                    .put("z", numArgToActualNum(argsTable.get(2)))
+                    .put("pitch", numArgToActualNum(argsTable.get(3)))
+                    .put("yaw", numArgToActualNum(argsTable.get(4)));
+
+            res.putData("isBlock", false);
+            res.putData("loc", loc);
+
+            return res;
+        });
+
+        paramsLs.add(new ArgsTable()
+                .addAtFirstNull(new FunctionParam("x", new CodeArg(ArgType.NUM)))
+                .addAtFirstNull(new FunctionParam("y", new CodeArg(ArgType.NUM)))
+                .addAtFirstNull(new FunctionParam("z", new CodeArg(ArgType.NUM)))
+        );
+        argSetters.add(argsTable -> {
+            CodeArg res = new CodeArg(ArgType.LOCATION);
+
+            JSONObject loc = new JSONObject()
+                    .put("x", numArgToActualNum(argsTable.get(0)))
+                    .put("y", numArgToActualNum(argsTable.get(1)))
+                    .put("z", numArgToActualNum(argsTable.get(2)))
+                    .put("pitch", 0)
+                    .put("yaw", 0);
+
+            res.putData("isBlock", false);
+            res.putData("loc", loc);
+
+            return res;
+        });
+
+        put("loc", new InstantiatorType("loc", ArgType.LOCATION, paramsLs, argSetters));
 
     }};
 
-    private static CodeArg vector(CarbonDFParser.Fun_callContext ctx){
-        return null;
+    public static Map<String, InstantiatorType> getInstantiatorMap() {
+        return instantiatorMap;
+    }
+
+    private static Number numArgToActualNum(CodeArg arg){
+        if (arg.getType() != ArgType.NUM) return 0;
+        String name = (String) arg.getData("name");
+        System.out.println(name);
+        Number res;
+        try {
+            res = NumberFormat.getInstance().parse(name);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+        return res;
     }
 }

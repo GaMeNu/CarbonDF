@@ -8,8 +8,6 @@ import java.util.List;
 
 public class ArgsTable implements toJSONObject {
 
-    private final int MAX_ARG_COUNT = 27;
-
     ArrayList<CodeArg> argList;
 
     /**
@@ -99,6 +97,11 @@ public class ArgsTable implements toJSONObject {
         return paramsTable.getArgDataList().size() == getArgDataList().size();
     }
 
+    /**
+     * Validates types of this args table against a params table.
+     * @param paramsTable an ArgsTable filled with FunctionParams.
+     * @return the index of the first non-matching param (-1 if none found)
+     */
     public int matchParams(ArgsTable paramsTable) {
         for (int i = 0; i < argList.size(); i++) {
             FunctionParam otherArg = ((FunctionParam) paramsTable.get(i));
@@ -148,10 +151,19 @@ public class ArgsTable implements toJSONObject {
 
         for(int i = 0; i < argList.size(); i++){
             if (argList.get(i) != null) {
-                argArr.put(new JSONObject()
-                        .put("item", argList.get(i).toJSON())
-                        .put("slot", i)
-                );
+                CodeArg arg = argList.get(i);
+                // Special case for ITEMs
+                if (arg.getType() == ArgType.ITEM) {
+                    argArr.put(new JSONObject()
+                            .put("item", arg.toJSON().getString("data"))
+                            .put("slot", i)
+                    );
+                } else {
+                    argArr.put(new JSONObject()
+                            .put("item", arg.toJSON())
+                            .put("slot", i)
+                    );
+                }
             }
         }
 
