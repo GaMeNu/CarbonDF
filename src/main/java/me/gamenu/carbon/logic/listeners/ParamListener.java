@@ -6,9 +6,11 @@ import me.gamenu.carbon.logic.compile.ProgramContext;
 import me.gamenu.carbon.logic.etc.TargetType;
 import me.gamenu.carbon.logic.exceptions.CarbonTranspileException;
 import me.gamenu.carbon.logic.exceptions.InvalidNameException;
+import me.gamenu.carbon.logic.exceptions.UnknownEnumValueException;
 import me.gamenu.carbon.parser.CarbonDFParser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import static me.gamenu.carbon.logic.compile.TranspileUtils.targetToType;
@@ -22,6 +24,26 @@ public class ParamListener extends BaseCarbonListener {
     InstantiatorTable.InstantiatorType instType;
 
     private Map<String, InstantiatorTable.InstantiatorType> instTable = InstantiatorTable.getInstantiatorMap();
+
+    private static final HashMap<String, String> escapeSeqs = new HashMap<>(){{
+        put("\\\\b", "\b");
+        put("\\\\f", "\f");
+        put("\\\\n", "\n");
+        put("\\\\r", "\r");
+        put("\\\\s", " ");
+        put("\\\\t", "\t");
+        put("\\\\'", "'");
+        put("\\\\\"", "\"");
+        put("\\\\\\\\", "\\\\");
+    }};
+
+    private static String interpretEscapeSeqs(String src){
+        String res = src;
+        for (Map.Entry<String, String> seq: escapeSeqs.entrySet()){
+            res = res.replaceAll(seq.getKey(), seq.getValue());
+        }
+        return res;
+    }
 
     public ParamListener(ProgramContext programContext) {
         super(programContext);
@@ -75,17 +97,22 @@ public class ParamListener extends BaseCarbonListener {
         }
         if (simpleCtx.simple_string() != null) {
             String stringString = simpleCtx.simple_string().getText();
-            return new CodeArg(ArgType.STRING).setArgName(stringString.substring(1, stringString.length() - 1));
+
+            return new CodeArg(ArgType.STRING).setArgName(interpretEscapeSeqs(stringString.substring(1, stringString.length() - 1)));
+
+
         }
         if (simpleCtx.styled_text() != null){
             String stringString = simpleCtx.styled_text().getText();
-            return new CodeArg(ArgType.STYLED_TEXT).setArgName(stringString.substring(1, stringString.length()-1));
+            return new CodeArg(ArgType.STYLED_TEXT).setArgName(interpretEscapeSeqs(stringString.substring(1, stringString.length() - 1)));
         }
 
         if (simpleCtx.game_value() != null){
             TargetType valTarget = targetToType(simpleCtx.game_value().target());
             String valName = simpleCtx.game_value().var_name().getText();
             GameValue.GameValueType gvType = GameValue.GameValueType.fromCodeName(valName);
+            if (gvType == null)
+                throwError("Could not identify game value", simpleCtx.game_value().var_name(), UnknownEnumValueException.class);
             return new GameValue(gvType, valTarget);
         }
         return null;
@@ -127,13 +154,6 @@ public class ParamListener extends BaseCarbonListener {
             res = matchForArgsOption(ctx, instArgs, instType, i);
 
         if (!res && !instArgs.getArgDataList().isEmpty()){
-            StringBuilder sb = new StringBuilder();
-            sb.append(instArgs.get(0).getType());
-            for (int i = 1; i < instArgs.getArgDataList().size(); i++){
-                sb.append(", ").append(instArgs.get(i).getType());
-            }
-
-
             throwError("Could not identify instantiator.", ctx.getParent(), CarbonTranspileException.class);
         }
     }

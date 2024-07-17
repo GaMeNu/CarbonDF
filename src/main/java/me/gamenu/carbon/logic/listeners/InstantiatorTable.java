@@ -90,6 +90,7 @@ public class InstantiatorTable {
 
         paramsLs = new ArrayList<>();
         argSetters = new ArrayList<>();
+
         paramsLs.add(new ArgsTable()
                 .addAtFirstNull(new FunctionParam("x", new CodeArg(ArgType.NUM)))
                 .addAtFirstNull(new FunctionParam("y", new CodeArg(ArgType.NUM)))
@@ -136,6 +137,57 @@ public class InstantiatorTable {
 
         put("loc", new InstantiatorType("loc", ArgType.LOCATION, paramsLs, argSetters));
 
+        paramsLs = new ArrayList<>();
+        argSetters = new ArrayList<>();
+
+        paramsLs.add(new ArgsTable()
+                .addAtFirstNull(new FunctionParam("data", new CodeArg(ArgType.STRING)))
+        );
+        argSetters.add(argsTable -> {
+            CodeArg res = new CodeArg(ArgType.ITEM);
+            res.putData("item", stringArgToActualString(argsTable.get(0)));
+            return res;
+        });
+
+        paramsLs.add(new ArgsTable()
+                .addAtFirstNull(new FunctionParam("data", new CodeArg(ArgType.STRING)))
+                .addAtFirstNull(new FunctionParam("data", new CodeArg(ArgType.NUM)))
+
+        );
+        argSetters.add(argsTable -> {
+            CodeArg res = new CodeArg(ArgType.ITEM);
+
+            String id = stringArgToActualString(argsTable.get(0));
+            // if (!id.startsWith("minecraft:")) id = "minecraft:" + id;
+
+            String resB = "{" +
+                    "id:" + "\"" + id + "\"" + "," +
+                    "Count:" + numArgToActualNum(argsTable.get(1)) + "b" +
+                    "}";
+            res.putData("item", resB);
+            return res;
+        });
+
+        paramsLs.add(new ArgsTable()
+                .addAtFirstNull(new FunctionParam("data", new CodeArg(ArgType.STRING)))
+                .addAtFirstNull(new FunctionParam("data", new CodeArg(ArgType.NUM)))
+                .addAtFirstNull(new FunctionParam("data", new CodeArg(ArgType.STRING)))
+        );
+        argSetters.add(argsTable -> {
+            CodeArg res = new CodeArg(ArgType.ITEM);
+            String id = stringArgToActualString(argsTable.get(0));
+            // if (!id.startsWith("minecraft:")) id = "minecraft:" + id;
+            String resB = "{" +
+                    "id:" + "\"" + id + "\"" + "," +
+                    "Count:" + numArgToActualNum(argsTable.get(1)) + "b" + "," +
+                    "tag:" + stringArgToActualString(argsTable.get(2)) +
+                    "}";
+            res.putData("item", resB);
+            return res;
+        });
+
+        put("item", new InstantiatorType("item", ArgType.ITEM, paramsLs, argSetters));
+
     }};
 
     public static Map<String, InstantiatorType> getInstantiatorMap() {
@@ -153,4 +205,10 @@ public class InstantiatorTable {
         }
         return res;
     }
+
+    private static String stringArgToActualString(CodeArg arg){
+        if (arg.getType() != ArgType.STRING && arg.getType() != ArgType.STYLED_TEXT) return "";
+        return (String) arg.getData("name");
+    }
+
 }

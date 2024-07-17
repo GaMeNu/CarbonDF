@@ -12,7 +12,7 @@ public class BlockType implements CarbonTypeEnum {
 
     private static final HashMap<String, BlockType> blockTypes = new HashMap<>();
 
-    private static String nameToCodeName(String name){
+    public static String nameToCodeName(String name){
         StringBuilder resB = new StringBuilder();
         String[] resSp = name.split(" ");
         for (String tok: resSp){
@@ -77,6 +77,7 @@ public class BlockType implements CarbonTypeEnum {
 
     public static BlockType fromCodeName(String codeName){
         for (BlockType bt : BlockType.getBlockTypes().values()) {
+            if (bt.getCodeName() == null) continue;
             if (bt.getCodeName().equals(codeName)) return bt;
         }
 

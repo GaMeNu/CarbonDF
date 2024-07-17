@@ -2,6 +2,8 @@ package me.gamenu.carbon.logic.args;
 
 import me.gamenu.carbon.logic.etc.CarbonTypeEnum;
 
+import java.util.HashMap;
+
 public enum ArgType implements CarbonTypeEnum {
     ANY("any"),
     PARAM("pn_el"),
@@ -24,6 +26,21 @@ public enum ArgType implements CarbonTypeEnum {
     TAG("bl_tag");
 
     private final String id;
+
+    private static final HashMap<String, ArgType> stringToArgType = new HashMap<>(){{
+        put("NUMBER", NUM);
+        put("TEXT", STRING);
+        put("COMPONENT", STYLED_TEXT);
+        put("LOCATION", LOCATION);
+        put("VECTOR", VECTOR);
+        put("ITEM", ITEM);
+        put("LIST", LIST);
+        put("DICT", DICT);
+    }};
+
+    public static ArgType fromStringName(String name){
+        return stringToArgType.get(name);
+    }
 
     ArgType(String id){
         this.id = id;

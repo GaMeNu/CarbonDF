@@ -20,7 +20,7 @@ public class TagUtils {
             JSONObject blockObj = (JSONObject) o;
             String cbName = blockObj.getString("codeblockName");
             String cbID = CBNameToIdentifier.get(cbName);
-            ActionType at = ActionType.fromID(blockObj.getString("name"));
+            ActionType at = ActionType.fromID(blockObj.getString("name"), BlockType.fromID(cbID));
             if (at.getID().equals("dynamic")) at = ActionType.getMatchingDynamicAction(BlockType.fromCodeBlockName(cbName));
             if (at != null) {
                 tagMap.put(at, blockObj.getJSONArray("tags"));

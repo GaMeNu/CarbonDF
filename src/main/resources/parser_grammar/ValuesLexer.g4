@@ -67,7 +67,7 @@ fragment DIGIT_SEQ
 STRING_LITERAL_SIMPLE_1
 : (
   STRING_DEFINE_1
-   (~([\\\r\n\f'])
+   (~([\\\r\n\f])
    | STRING_ESCAPE_SEQ
    )*?
   STRING_DEFINE_1
@@ -77,7 +77,7 @@ STRING_LITERAL_SIMPLE_1
 STRING_LITERAL_SIMPLE_2:
 (
   STRING_DEFINE_2
-   (~([\\\r\n\f'])
+   (~([\\\r\n\f])
    | STRING_ESCAPE_SEQ
    )*?
   STRING_DEFINE_2

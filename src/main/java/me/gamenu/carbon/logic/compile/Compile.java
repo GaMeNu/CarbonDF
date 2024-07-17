@@ -1,6 +1,9 @@
 package me.gamenu.carbon.logic.compile;
 
 import me.gamenu.carbon.logic.blocks.BlocksTable;
+import me.gamenu.carbon.logic.blocks.CodeBlock;
+import me.gamenu.carbon.logic.blocks.DefinitionBlock;
+import me.gamenu.carbon.logic.blocks.EventBlock;
 import me.gamenu.carbon.logic.exceptions.BaseCarbonException;
 import me.gamenu.carbon.logic.exceptions.ErrorListener;
 import me.gamenu.carbon.logic.listeners.ProgramBaseListener;
@@ -92,7 +95,14 @@ public class Compile {
         tableList = programBaseListener.getTableList();
 
         for (BlocksTable table : tableList){
+            CodeBlock firstBlock = table.get(0);
+            if (firstBlock instanceof EventBlock){
+                System.out.println("EVENT " + firstBlock.getActionType().getID());
+            } else if (firstBlock instanceof DefinitionBlock defBlock) {
+                System.out.println(firstBlock.getBlockType().getCodeBlockName() + " " + (defBlock.getName()));
+            }
             System.out.println(compiledTable(table));
+            System.out.println();
         }
     }
 }

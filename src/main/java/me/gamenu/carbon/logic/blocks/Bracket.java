@@ -9,7 +9,7 @@ public class Bracket extends CodeBlock{
         CLOSE("close")
         ;
 
-        private String id;
+        private final String id;
         Direction(String id){
             this.id = id;
         }
@@ -23,7 +23,7 @@ public class Bracket extends CodeBlock{
         NORMAL("norm"),
         REPEAT("repeat")
         ;
-        private String id;
+        private final String id;
 
         Type(String id) {
             this.id = id;
@@ -38,7 +38,7 @@ public class Bracket extends CodeBlock{
     Type bracketType;
 
     public Bracket(Direction direction, Type type) {
-        super(BlockType.fromID("bracket"), ActionType.fromID("NULL"));
+        super(BlockType.fromID("bracket"), null);
         this.bracketDirection = direction;
         this.bracketType = type;
     }

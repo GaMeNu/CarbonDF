@@ -152,18 +152,10 @@ public class ArgsTable implements toJSONObject {
         for(int i = 0; i < argList.size(); i++){
             if (argList.get(i) != null) {
                 CodeArg arg = argList.get(i);
-                // Special case for ITEMs
-                if (arg.getType() == ArgType.ITEM) {
-                    argArr.put(new JSONObject()
-                            .put("item", arg.toJSON().getString("data"))
-                            .put("slot", i)
-                    );
-                } else {
-                    argArr.put(new JSONObject()
-                            .put("item", arg.toJSON())
-                            .put("slot", i)
-                    );
-                }
+                argArr.put(new JSONObject()
+                        .put("item", arg.toJSON())
+                        .put("slot", i)
+                );
             }
         }
 

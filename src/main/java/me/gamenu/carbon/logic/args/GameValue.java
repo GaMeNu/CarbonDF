@@ -1,15 +1,40 @@
 package me.gamenu.carbon.logic.args;
 
+import me.gamenu.carbon.logic.compile.TranspileUtils;
 import me.gamenu.carbon.logic.etc.CarbonTypeEnum;
 import me.gamenu.carbon.logic.etc.TargetType;
+import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.HashMap;
 
 public class GameValue extends CodeArg{
 
-    public enum GameValueType implements CarbonTypeEnum {
+    public static class GameValueType implements CarbonTypeEnum {
 
-        PLAYER_COUNT("Player Count", "player_count", ArgType.NUM),
-        ;
+        public static final HashMap<String, GameValueType> gameValueTypes = new HashMap<>();
+
+
+        static {
+            JSONArray gameValues = TranspileUtils.DBC.getJSONArray("gameValues");
+            for (Object o: gameValues){
+                JSONObject gv = (JSONObject) o;
+                JSONObject icon = gv.getJSONObject("icon");
+                String name = verifyColorsRemoved(icon.getString("name"));
+                String codeName = nameToCodeName(name);
+                ArgType type = ArgType.fromStringName(icon.getString("returnType"));
+                gameValueTypes.put(codeName, new GameValueType(name, codeName, type));
+            }
+        }
+
+        private static String verifyColorsRemoved(String name){
+            if (name.charAt(0) == '§') return name.substring(2);
+            return name;
+        }
+
+        private static String nameToCodeName(String name){
+            return String.join("_", name.toLowerCase().split(" "));
+        }
 
         final String id;
         final String codeName;
@@ -27,7 +52,7 @@ public class GameValue extends CodeArg{
 
 
         public static GameValueType fromCodeName(String codeName){
-            for (GameValueType gvType : GameValueType.values()) {
+            for (GameValueType gvType : gameValueTypes.values()) {
                 if (gvType.codeName.equals(codeName)) return gvType;
             }
             return null;

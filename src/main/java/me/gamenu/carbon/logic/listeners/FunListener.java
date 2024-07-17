@@ -104,14 +104,17 @@ public class FunListener extends BaseCarbonListener {
         String actionName = ctx.SAFE_TEXT().getText();
         blockTags = new ArgsTable();
 
-        actionType = ActionType.fromCodeName(actionName);
+        if (requestedBlocktype != null)
+            actionType = ActionType.fromCodeName(actionName, requestedBlocktype);
+        else
+            actionType = ActionType.fromCodeName(actionName);
 
         if (actionType != null)
             handleBasicAction(ctx);
         else if (programContext.getFunTable().get(actionName) != null)
             handleDefinitionCall(ctx, actionName);
         else
-            throwError("Could not identify action/call \""+actionName+"\"", ctx, UnknownEnumValueException.class);
+            throwError("Could not identify action/call \""+actionName+"\". It may be undefined or ambiguous.", ctx, UnknownEnumValueException.class);
 
         if (ctx.call_params() != null)
             enterCall_params(ctx.call_params());
@@ -133,12 +136,12 @@ public class FunListener extends BaseCarbonListener {
         }
 
 
-        if (blockType == BlockType.fromID("set_var") && funReturnVars.getArgDataList().isEmpty())
-            throwError("It is generally recommended to avoid using SetVariable blocks as normal calls, as it bypasses strong typing and is untested behavior", ctx, CarbonTranspileException.class, CarbonTranspileException.Severity.WARN);
+        // if (blockType == BlockType.fromID("set_var") && funReturnVars.getArgDataList().isEmpty())
+        //    throwError("It is generally recommended to avoid using SetVariable blocks as normal calls, as it bypasses strong typing and is untested behavior", ctx, CarbonTranspileException.class, CarbonTranspileException.Severity.WARN);
 
-        if (ActionType.getBaseFunsReturns().containsKey(actionType.getCodeName()) && funReturnVars.getArgDataList().isEmpty())
-            throwError("Function returns " + ActionType.getBaseFunsReturns().get(actionType.getCodeName()).getArgDataList().size() + " value(s) but no variables were given (use the '_' variable to ignore the result)", ctx, CarbonTranspileException.class);
-
+        // Check whether this function returns values, but we have no variables to receive those
+        if ((ActionType.getBaseFunsReturns().containsKey(actionType.getCodeName()) && !ActionType.getBaseFunsReturns().get(actionType.getCodeName()).isEmpty()) && funReturnVars.getArgDataList().isEmpty())
+            throwError("Function returns value(s) but no variables to collect were given (use the '_' variable to ignore the result(s))", ctx, CarbonTranspileException.class);
 
         block = new CodeBlock(blockType, actionType);
     }
@@ -288,7 +291,7 @@ public class FunListener extends BaseCarbonListener {
         }
 
         // Special case for Returns in functions
-        if (programContext.getCurrentFun() != null && actionType == ActionType.fromID("Return")){
+        if (programContext.getCurrentFun() != null && actionType == ActionType.fromID("Return", BlockType.fromID("control"))){
             returnSpecialCase(ctx, newArgsTable);
         } else {
             block.getArgs().extend(newArgsTable);
@@ -342,7 +345,7 @@ public class FunListener extends BaseCarbonListener {
             }
 
 
-            blocksTable.add(new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("=")).setArgs(
+            blocksTable.add(new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("=", BlockType.fromID("set_var"))).setArgs(
                     new ArgsTable()
                             .addAtFirstNull(retVar)
                             .addAtFirstNull(resArg)
@@ -509,7 +512,7 @@ public class FunListener extends BaseCarbonListener {
         ArgsTable resTable = new ArgsTable()
                 .addAtFirstNull(varArg)
                 .addAtFirstNull(valArg);
-        blocksTable.add(new CodeBlock(BlockType.fromID("func"), ActionType.fromID("=")).setArgs(resTable));
+        blocksTable.add(new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("=", BlockType.fromID("set_var"))).setArgs(resTable));
     }
 
 
@@ -572,7 +575,7 @@ public class FunListener extends BaseCarbonListener {
             }
         }
 
-        CodeBlock newBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateList"))
+        CodeBlock newBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateList", BlockType.fromID("set_var")))
                 .setArgs(resArgs);
 
         blocksTable.add(newBlock);
@@ -637,10 +640,10 @@ public class FunListener extends BaseCarbonListener {
 
         // Space-saving measure, no need to create the list blocks if the dict is empty anyway :shrug:
         if (!dictCtx.dict_pair().isEmpty()){
-            CodeBlock keysBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateList"))
+            CodeBlock keysBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateList", BlockType.fromID("set_var")))
                     .setArgs(resKeys);
 
-            CodeBlock valsBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateList"))
+            CodeBlock valsBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateList", BlockType.fromID("set_var")))
                     .setArgs(resVals);
 
             blocksTable
@@ -653,7 +656,7 @@ public class FunListener extends BaseCarbonListener {
 
         }
 
-        CodeBlock dictBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateDict"))
+        CodeBlock dictBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateDict", BlockType.fromID("set_var")))
                 .setArgs(resArgs);
 
 
@@ -686,29 +689,40 @@ public class FunListener extends BaseCarbonListener {
         ArgsTable resTable = new ArgsTable()
                 .addAtFirstNull(var)
                 .addAtFirstNull(val);
-        blocksTable.add(new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("=")).setArgs(resTable));
+        blocksTable.add(new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("=", BlockType.fromID("set_var"))).setArgs(resTable));
     }
 
     private void assignFunCall(ParserRuleContext ctx, List<CarbonDFParser.Var_nameContext> nameCtxLs, CarbonDFParser.Fun_callContext funCtx) {
         String funName = funCtx.single_fun_call().SAFE_TEXT().getText();
 
-        ArgsTable args;
+        ArrayList<ArgsTable> argsOptions = new ArrayList<>();
 
         // Get return args
         if (programContext.getFunTable().get(funName) != null){
-            args = programContext.getFunTable().get(funName).getReturns();
+            argsOptions.add(programContext.getFunTable().get(funName).getReturns());
         } else if (ActionType.getBaseFunsReturns().get(funName) != null) {
-            args = ActionType.getBaseFunsReturns().get(funName);
+            argsOptions = ActionType.getBaseFunsReturns().get(funName);
         } else {
             if (ActionType.fromCodeName(funName) != null)
-                throwError("Function " + funName + " does not return anything", ctx, CarbonTranspileException.class);
+                throwError("Base-function " + funName + " does not return anything", ctx, CarbonTranspileException.class);
             else
-                throwError("Could not identify function \"" + funName + "\", are you sure it is defined?", ctx, InvalidNameException.class);
+                throwError("Could not identify call \"" + funName + "\", it may be undefined or ambiguous", ctx, InvalidNameException.class);
             return;
         }
 
-        if (nameCtxLs.size() != args.getArgDataList().size()) throwError(String.format("Amount of variables (%s) does not match function %s amount of return values (%s)", nameCtxLs.size(), funName, args.getArgDataList().size()), ctx, CarbonTranspileException.class);
+        for (ArgsTable args: argsOptions) {
+            attemptSingleArgs(ctx, nameCtxLs, funCtx, args, funName);
+        }
 
+        if (funReturnVars.getArgDataList().isEmpty())
+            throwError("Return variables do not match return values", ctx, CarbonTranspileException.class);
+
+        funReturnVars = new ArgsTable();
+    }
+
+    private void attemptSingleArgs(ParserRuleContext ctx, List<CarbonDFParser.Var_nameContext> nameCtxLs, CarbonDFParser.Fun_callContext funCtx, ArgsTable args, String funName) {
+        if (nameCtxLs.size() != args.getArgDataList().size())
+            return;
 
         ArgsTable resTable = new ArgsTable();
 
@@ -735,7 +749,7 @@ public class FunListener extends BaseCarbonListener {
             if (!var.isDynamic()
                     && var.getVarType() != ArgType.ANY
                     && var.getVarType() != retType)
-                throwError(String.format("Assigned type %s does not match defined type %s for statically-typed variable %s", retType, var.getVarType(), var.getName()), nameCtx, TypeException.class);
+                return;
 
             var.setValue(new CodeArg(retType));
 
@@ -754,6 +768,5 @@ public class FunListener extends BaseCarbonListener {
             varTable.get(varName).setValue(args.get(i));
         }
 
-        funReturnVars = new ArgsTable();
     }
 }

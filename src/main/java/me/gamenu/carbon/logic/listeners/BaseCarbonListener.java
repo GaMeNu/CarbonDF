@@ -25,6 +25,7 @@ public class BaseCarbonListener extends CarbonDFParserBaseListener {
                     Class<? extends RecognitionException> errClass,
                     CarbonTranspileException.Severity severity){
         ErrUtils.throwError(msg, parser, ctx, errClass, severity);
+
     }
 
 }

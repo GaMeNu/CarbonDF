@@ -11,13 +11,16 @@ import java.util.HashMap;
 
 public class ActionType {
 
-    private static final HashMap<String, ActionType> actionTypes = new HashMap<>();
+    private static final HashMap<BlockType, HashMap<String, ActionType>> actionTypes = new HashMap<>();
 
     static {
         JSONArray actions;
 
         actions = TranspileUtils.DBC.getJSONArray("actions");
-        actionTypes.put("NULL", new ActionType(null, null, null));
+
+        for (BlockType bt: BlockType.getBlockTypes().values()){
+            actionTypes.put(bt, new HashMap<>());
+        }
 
         for (Object o: actions){
             JSONObject action = (JSONObject) o;
@@ -26,9 +29,10 @@ public class ActionType {
             BlockType blockType = BlockType.fromCodeBlockName(codeblockName);
             boolean cancellable = action.optBoolean("cancellable");
             String codeName = nameToCodeName(id, blockType);
-            actionTypes.put(id, new ActionType(id, codeName, blockType, cancellable));
+            actionTypes.get(blockType).put(id, new ActionType(id, codeName, blockType, cancellable));
         }
     }
+
 
     private static String nameToCodeName(String id, BlockType blockType){
         if (blockType.getCodeName().equals("event")) return id;
@@ -39,7 +43,10 @@ public class ActionType {
             case "-" -> "sub";
             case "x" -> "mult";
             case "/" -> "div";
-            default -> id.toLowerCase().charAt(0) + id.substring(1);
+            default -> {
+                id = id.strip();
+                yield id.toLowerCase().charAt(0) + id.substring(1);
+            }
         };
     }
 
@@ -51,14 +58,29 @@ public class ActionType {
     }};
 
 
-    private static final HashMap<String, ArgsTable> baseFunsReturns = new HashMap<>() {{
-        put("add", new ArgsTable().addAtFirstNull(new CodeArg(ArgType.NUM)));
-        put("sub", new ArgsTable().addAtFirstNull(new CodeArg(ArgType.NUM)));
-        put("mult", new ArgsTable().addAtFirstNull(new CodeArg(ArgType.NUM)));
-        put("div", new ArgsTable().addAtFirstNull(new CodeArg(ArgType.NUM)));
+    private static final HashMap<String, ArrayList<ArgsTable>> baseFunsReturns = new HashMap<>() {{
+        JSONArray actions = TranspileUtils.DBC.getJSONArray("actions");
+        for (Object o: actions){
+            JSONObject action = (JSONObject) o;
+            BlockType blockType = BlockType.fromCodeBlockName(action.getString("codeblockName"));
+            if (!blockType.equals(BlockType.fromID("set_var"))) continue;
+            ActionType actionType = ActionType.fromID(action.getString("name"), blockType);
+            JSONArray returnValues = action.getJSONObject("icon").getJSONArray("returnValues");
+
+            ArrayList<ArgsTable> retOpts = new ArrayList<>();
+            for (Object ob: returnValues){
+                ArgsTable rets = new ArgsTable();
+                JSONObject returnValue = (JSONObject) ob;
+                String type = returnValue.optString("type", null);
+                if (type == null) continue;
+                rets.addAtFirstNull(new CodeArg(ArgType.fromStringName(type)));
+                retOpts.add(rets);
+            }
+            put(actionType.getCodeName(), retOpts);
+        }
     }};
 
-    public static HashMap<String, ArgsTable> getBaseFunsReturns() {
+    public static HashMap<String, ArrayList<ArgsTable>> getBaseFunsReturns() {
         return baseFunsReturns;
     }
 
@@ -85,16 +107,41 @@ public class ActionType {
         return codeName;
     }
 
-    public static ActionType fromCodeName(String codeName) {
-        for (ActionType at : ActionType.actionTypes.values()) {
+    public static ActionType fromCodeName(String codeName, BlockType blockType) {
+        for (ActionType at: actionTypes.get(blockType).values()) {
             if (at.getCodeName() == null) continue;
             if (at.getCodeName().equals(codeName)) return at;
         }
         return null;
     }
-    public static ActionType fromID(String id) {
-        return actionTypes.get(id);
+
+    public static ActionType fromCodeName(String codeName){
+        ActionType res = null;
+        for (HashMap<String, ActionType> blockActions: ActionType.actionTypes.values()) {
+            for (ActionType at: blockActions.values()) {
+                if (at.getCodeName() == null) continue;
+                if (at.getCodeName().equals(codeName)) {
+                    if (res == null) res = at;
+                    else return null;
+                }
+            }
+        }
+        return res;
     }
+
+    public static HashMap<String, ActionType> getAllOfBlock(BlockType blockType){
+        return actionTypes.get(blockType);
+    }
+    public static ActionType fromID(String id, BlockType blockType) {
+        return actionTypes.get(blockType).get(id);
+    }
+    /*
+    public static ActionType fromID(String id) {
+        for (HashMap<String, ActionType> ba: actionTypes.values()) {
+            return ba.get(id);
+        }
+        return null;
+    }*/
 
     public BlockType getBlock() {
         return blockType;

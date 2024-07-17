@@ -72,8 +72,11 @@ public class DefListener extends BaseCarbonListener {
             }
         }
 
-        if (!modifiers.isExtern()) {
+        if (!modifiers.isExtern() && !defName.equals("_")) {
             defTable.add(defBlock);
+        }
+
+        if (!modifiers.isExtern()) {
             enterDefblock(ctx.defblock());
         }
 

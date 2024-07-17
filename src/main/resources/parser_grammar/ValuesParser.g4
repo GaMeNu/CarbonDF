@@ -63,13 +63,9 @@ dict_pair: key WHITESPACES? ':' WHITESPACES? any_item;
 
 key: simple_string;
 
-simple_string
-: STRING_LITERAL_SIMPLE_1
-;
+simple_string: STRING_LITERAL_SIMPLE_1;
 
-styled_text
-: STRING_LITERAL_SIMPLE_2
-;
+styled_text: STRING_LITERAL_SIMPLE_2;
 
 number: NUMBER;
 

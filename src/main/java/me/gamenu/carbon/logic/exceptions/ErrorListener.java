@@ -67,16 +67,20 @@ public class ErrorListener extends BaseErrorListener {
         int errDispPointer = lineStr.length() + errStartPointer;
 
         int errEndPointer = -1;
-        if (e != null && e.getOffendingToken() != null) {
-            errEndPointer = errStartPointer + e.getOffendingToken().getText().length();
-        } else if (offendingSymbol instanceof CommonToken) {
+        if (offendingSymbol instanceof CommonToken) {
             errEndPointer = errStartPointer + ((CommonToken) offendingSymbol).getText().length();
+        } else if (e != null && e.getOffendingToken() != null) {
+            errEndPointer = errStartPointer + e.getOffendingToken().getText().length();
         } else if (e != null) {
             errEndPointer = errStartPointer = e.getCtx().getText().length();
         }
 
         String textFmt;
-        if (errEndPointer != -1) textFmt = ANSICode(ANSI_WHITE, ANSI_BOLD) + textTrim.substring(0, errStartPointer) + ANSICode(ANSI_RED, ANSI_BOLD) + textTrim.substring(errStartPointer, errEndPointer) + ANSICode(ANSI_WHITE, ANSI_BOLD) + textTrim.substring(errEndPointer) + ANSICode(ANSI_RESET);
+        if (errEndPointer != -1) try {
+            textFmt = ANSICode(ANSI_WHITE, ANSI_BOLD) + textTrim.substring(0, errStartPointer) + ANSICode(ANSI_RED, ANSI_BOLD) + textTrim.substring(errStartPointer, errEndPointer) + ANSICode(ANSI_WHITE, ANSI_BOLD) + textTrim.substring(errEndPointer) + ANSICode(ANSI_RESET);
+        } catch (Exception err) {
+            textFmt = ANSICode(ANSI_WHITE, ANSI_BOLD) + textTrim + ANSICode(ANSI_RESET);
+        }
         else textFmt = ANSICode(ANSI_WHITE, ANSI_BOLD) + textTrim + ANSICode(ANSI_RESET);
 
         stringBuilder.append(INDENT).append(ANSICode(ANSI_WHITE)).append(lineStr);

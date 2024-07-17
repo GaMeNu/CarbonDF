@@ -53,7 +53,7 @@ public class CompoundListener extends BaseCarbonListener{
         enterBlock(ctx.block(0));
 
         if (ctx.ELSE_KEYWORD() != null) {
-            blocksTable.add(new CodeBlock(BlockType.fromID("else"), ActionType.fromID("NULL")));
+            blocksTable.add(new CodeBlock(BlockType.fromID("else"), null));
             enterBlock(ctx.block(1));
         }
     }
@@ -64,30 +64,30 @@ public class CompoundListener extends BaseCarbonListener{
         CarbonDFParser.Fun_callContext callCtx = ctx.fun_call();
 
         String repeatTypeText = ctx.repeat_type().getText();
-        ActionType rt = ActionType.fromCodeName(repeatTypeText);
+        ActionType rt = ActionType.fromCodeName(repeatTypeText, BlockType.fromID("repeat"));
 
         if (rt == null) {
             throwError("Could not identify repeat type.", ctx.repeat_type(), CarbonTranspileException.class);
             return;
         }
 
-        if (rt == ActionType.fromID("While") && ctx.fun_call() == null) {
+        if (rt == ActionType.fromID("While", BlockType.fromID("repeat")) && ctx.fun_call() == null) {
             throwError("Repeat while requires a secondary function call of one of the IF actions", ctx, CarbonTranspileException.class);
             return;
         }
 
-        if (rt != ActionType.fromID("While") && ctx.fun_call() != null) {
+        if (rt != ActionType.fromID("While", BlockType.fromID("repeat")) && ctx.fun_call() != null) {
             throwError("Only repeat while may contain a secondary function call", ctx.fun_call(), CarbonTranspileException.class);
             return;
         }
 
-        if (ctx.NOT_KEYWORD() != null && rt != ActionType.fromID("While")) throwError("NOT keyword in repeat only applies to the WHILE action.", ctx, CarbonTranspileException.class);
+        if (ctx.NOT_KEYWORD() != null && rt != ActionType.fromID("While", BlockType.fromID("repeat"))) throwError("NOT keyword in repeat only applies to the WHILE action.", ctx, CarbonTranspileException.class);
 
         CodeBlock repeatBlock = new CodeBlock(BlockType.fromCodeBlockName("REPEAT"), rt);
 
         CarbonDFParser.Call_paramsContext paramsCtx;
 
-        if (rt == ActionType.fromID("While")){
+        if (rt == ActionType.fromID("While", BlockType.fromID("repeat"))){
 
             repeatBlock = repeatWhileCase(ctx, repeatBlock);
         } else if (ctx.call_params() != null){

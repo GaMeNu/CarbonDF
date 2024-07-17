@@ -1,13 +1,40 @@
-fun testing(in1: num, in2*?: num) -> (out: num){
-
-    line out2: dict = {
-        "res": in1,
-        "res2": game.player_count
-    };
+fun _(){
+    saved nameToUUID: dict;
 }
 
-hidden fun main(){
-    line x = mult(1, 2);
-    x = testing(x, x, x);
-    sendMessageSeq("a", "b", 1);
+event Join(){
+    initVars();
+
+    if not dictValueEquals(nameToUUID, default.uuid, default.name){
+        setDictValue(nameToUUID, default.uuid, default.name);
+        everyone.sendMessage('Welcome, <b>%default</b><reset>! (first join)');
+        sendMessage('Welcome to the plot!');
+    } else {
+        sendMessage('Welcome back, <b>%default</b><reset>!');
+    }
+    giveItems(item<"firework_rocket", 1>);
+}
+
+event PlayerTakeDmg(){
+    cancelEvent();
+}
+
+event RightClick(){
+    if isHolding(item<"firework_rocket", 1>){
+        cancelEvent();
+        repeat multiple(4){
+            PlayerAction::launchUp(20);
+            line pLoc = default.location;
+            setCoord(pLoc, pLoc, 90){"Coordinate": "Pitch"};
+            setCoord(pLoc, pLoc, 90){"Coordinate": "Yaw"};
+            GameAction::launchProj(item<"arrow", 1>, pLoc);
+            Control::wait(10);
+        }
+    }
+}
+
+fun initVars(){
+    if not varExists(nameToUUID){
+        nameToUUID = {};
+    }
 }

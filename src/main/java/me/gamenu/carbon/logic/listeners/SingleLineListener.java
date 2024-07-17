@@ -30,6 +30,7 @@ public class SingleLineListener extends BaseCarbonListener{
         super.enterSimple_statement(ctx);
         if (ctx == null) return;
         FunListener funListener = new FunListener(programContext);
+
         if (ctx.fun_call() != null){
             ctx.fun_call().enterRule(funListener);
         } else if (ctx.var_define() != null){
