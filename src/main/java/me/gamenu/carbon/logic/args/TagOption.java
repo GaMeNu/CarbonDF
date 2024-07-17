@@ -47,6 +47,7 @@ public class TagOption implements CarbonTypeEnum {
     }
 
     public static TagOption getTagOption(TagType tagType, String codeName){
+        if (tagType == null) return null;
         return tagOptionMap.get(tagType).get(codeName);
     }
 

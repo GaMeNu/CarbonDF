@@ -31,7 +31,7 @@ hidden proc lightningLoop() {
     // Declare new weakly typed variable with the value of 20 (num)
     line launchPower = 20;
     
-    repeat (forever()) {
+    repeat forever() {
         
         // New strongly typed variable (loc) with the value of the default player's location
         line playerPos: loc = default.location;

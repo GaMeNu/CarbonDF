@@ -1,12 +1,13 @@
-fun test(a: num, ?*b: num, ?*input: str) -> (){
-    //ignore
+fun testing(in1: num, in2*?: num) -> (out: num){
+
+    line out2: dict = {
+        "res": in1,
+        "res2": game.player_count
+    };
 }
 
-fun test2(a: num, b: str){
-
-}
-
-fun main(){
-    test2(1, 2);
-    test(1, 2, "a", "b", "c", 3);
+hidden fun main(){
+    line x = mult(1, 2);
+    x = testing(x, x, x);
+    sendMessageSeq("a", "b", 1);
 }

@@ -53,7 +53,7 @@ public class DefListener extends BaseCarbonListener {
         if (defBlock == null) return;
 
         if (ctx.defblock() == null && !modifiers.isExtern()){
-            if (defBlock.getBlockType() == BlockType.FUNC || defBlock.getBlockType() == BlockType.PROCESS)
+            if (defBlock.getBlockType() == BlockType.fromID("func") || defBlock.getBlockType() == BlockType.fromID("process"))
                 throwError("Non-external definitions does not contain a body. Please mark your function as \"extern\", or give it a body.", ctx.startdef(), CarbonTranspileException.class);
             else
                 throwError("Event is missing a required body.", ctx.startdef(), CarbonTranspileException.class);
@@ -63,7 +63,7 @@ public class DefListener extends BaseCarbonListener {
             throwError("External definitions cannot contain a function body.", ctx.startdef(), CarbonTranspileException.class);
         }
         if (modifiers.isLsCancel()){
-            if (defBlock.getBlockType() != BlockType.EVENT_PLAYER && defBlock.getBlockType() != BlockType.EVENT_ENTITY)
+            if (defBlock.getBlockType() != BlockType.fromID("event") && defBlock.getBlockType() != BlockType.fromID("entity_event"))
                 throwError("Only cancelable events may be marked as LS-CANCEL.", ctx.startdef().def_keyword(), CarbonTranspileException.class);
             else if (!defBlock.getActionType().isCancellable()){
                 throwError("Only cancelable events may be marked as LS-CANCEL.", ctx.startdef().def_name(), CarbonTranspileException.class);
@@ -72,10 +72,8 @@ public class DefListener extends BaseCarbonListener {
             }
         }
 
-        defTable.add(defBlock);
-
         if (!modifiers.isExtern()) {
-
+            defTable.add(defBlock);
             enterDefblock(ctx.defblock());
         }
 
@@ -85,8 +83,8 @@ public class DefListener extends BaseCarbonListener {
 
     @Override
     public void exitSingle_def(Single_defContext ctx) {
-        varTable.clearLineScope();
         super.exitSingle_def(ctx);
+        varTable.clearLineScope();
     }
 
     @Override
@@ -97,8 +95,8 @@ public class DefListener extends BaseCarbonListener {
         defName = ctx.def_name().getText();
         try {
             switch (((TerminalNode) ctx.def_keyword().getChild(0)).getSymbol().getType()) {
-                case FUNDEF_KEYWORD -> defBlock = new DefinitionBlock(BlockType.FUNC, null, defName);
-                case PROCDEF_KEYWORD -> defBlock = new DefinitionBlock(BlockType.PROCESS, null, defName);
+                case FUNDEF_KEYWORD -> defBlock = new DefinitionBlock(BlockType.fromID("func"), null, defName);
+                case PROCDEF_KEYWORD -> defBlock = new DefinitionBlock(BlockType.fromID("process"), null, defName);
                 case EVENTDEF_KEYWORD -> defBlock = EventBlock.fromID(defName);
                 default -> throw new ParseCancellationException(new UnrecognizedTokenException(ctx.def_keyword().getText()));
             }
@@ -111,19 +109,19 @@ public class DefListener extends BaseCarbonListener {
         if (ctx.ret_params() != null) enterRet_params(ctx.ret_params());
 
         if (modifiers.isExtern())
-            if (defBlock.getBlockType() != BlockType.FUNC && defBlock.getBlockType() != BlockType.PROCESS){
+            if (defBlock.getBlockType() != BlockType.fromID("func") && defBlock.getBlockType() != BlockType.fromID("process")){
                 throwError("Only functions and processes may be marked as external.", ctx, CarbonTranspileException.class);
             }
 
-        if (!defBlock.getArgs().getArgDataList().isEmpty() && defBlock.getBlockType() != BlockType.FUNC){
+        if (!defBlock.getArgs().getArgDataList().isEmpty() && defBlock.getBlockType() != BlockType.fromID("func")){
             throwError("Only Function definitions may contain parameters", ctx, CarbonTranspileException.class);
         }
 
         // We only do this here because otherwise we fail the check above.
         // Great design choice, I know.
         // I agree. -Eztyl
-        if (defBlock.getBlockType() == BlockType.FUNC) placeFunctionParams();
-        else if (defBlock.getBlockType() == BlockType.PROCESS) placeProcessParams();
+        if (defBlock.getBlockType() == BlockType.fromID("func")) placeFunctionParams();
+        else if (defBlock.getBlockType() == BlockType.fromID("process")) placeProcessParams();
     }
 
 
@@ -156,7 +154,7 @@ public class DefListener extends BaseCarbonListener {
     public void enterRet_params(Ret_paramsContext ctx) {
         super.enterRet_params(ctx);
         if (ctx == null) return;
-        if (defBlock.getBlockType() != BlockType.FUNC) throwError("Only function definitions may contain parameters", ctx, CarbonTranspileException.class);
+        if (defBlock.getBlockType() != BlockType.fromID("func")) throwError("Only function definitions may contain parameters", ctx, CarbonTranspileException.class);
 
         paramOutputBuffer = new ArgsTable();
         for (Def_paramContext defCtx : ctx.def_param()){
@@ -240,15 +238,16 @@ public class DefListener extends BaseCarbonListener {
         ActionType at = ActionType.getMatchingDynamicAction(defBlock.getBlockType());
         TagType hidden = TagType.getTagType(at, "IsHidden");
         if (!modifiers.isVisible()){
-            return new BlockTag(BlockType.PROCESS, at, hidden, TagOption.getTagOption(hidden, "True"));
+            return new BlockTag(BlockType.fromID("process"), at, hidden, TagOption.getTagOption(hidden, "True"));
         } else {
-            return new BlockTag(BlockType.PROCESS, at, hidden, TagOption.getTagOption(hidden, "False"));
+            return new BlockTag(BlockType.fromID("process"), at, hidden, TagOption.getTagOption(hidden, "False"));
         }
     }
 
     @Override
     public void enterDefblock(CarbonDFParser.DefblockContext ctx) {
         super.enterDefblock(ctx);
+        if (ctx == null) return;
         SingleLineListener singleLineListener = new SingleLineListener(programContext);
 
         int lineCnt = 0;

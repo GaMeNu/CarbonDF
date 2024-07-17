@@ -145,7 +145,6 @@ public class InstantiatorTable {
     private static Number numArgToActualNum(CodeArg arg){
         if (arg.getType() != ArgType.NUM) return 0;
         String name = (String) arg.getData("name");
-        System.out.println(name);
         Number res;
         try {
             res = NumberFormat.getInstance().parse(name);
