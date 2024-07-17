@@ -1,35 +1,54 @@
 package me.gamenu.carbon.logic.blocks;
 
 import me.gamenu.carbon.logic.args.*;
+import me.gamenu.carbon.logic.compile.TranspileUtils;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 
-public enum ActionType {
+public class ActionType {
 
-    // IDs are UNIQUE! Make sure to not fuck it up!
-    NULL(null, null, null),
-    EVENT_JOIN("Join", "Join", BlockType.EVENT_PLAYER),
-    EVENT_LEFT_CLICK("LeftClick", "LeftClick", BlockType.EVENT_PLAYER, true),
-    EVENT_ENTITY_DAMAGE_ENTITY("EntityDmgEntity", "EntityDmgEntity", BlockType.EVENT_ENTITY),
-    DYNAMIC_FUNC("dynamic", null, BlockType.FUNC),
-    DYNAMIC_CALL_FUNC("dynamic", null, BlockType.CALL_FUNC),
-    DYNAMIC_PROC("dynamic",null, BlockType.PROCESS),
-    DYNAMIC_START_PROC("dynamic", null, BlockType.START_PROCESS),
-    SEND_MESSAGE("SendMessage", "sendMessage", BlockType.PLAYER_ACTION),
-    SIMPLE_ASSIGN("=", "assign", BlockType.SET_VARIABLE),
-    CREATE_LIST("CreateList", "createList", BlockType.SET_VARIABLE),
-    CREATE_DICT("CreateDict", "createDict", BlockType.SET_VARIABLE),
-    ADD_NUMBERS("+", "add", BlockType.SET_VARIABLE),
-    SUBTRACT_NUMBERS("-", "sub", BlockType.SET_VARIABLE),
-    MULTIPLY_NUMBERS("x", "mult", BlockType.SET_VARIABLE),
-    DIVIDE_NUMBERS("/", "div", BlockType.SET_VARIABLE),
-    SELECT_RANDOM_PLAYER("RandomPlayer", "randomPlayer", BlockType.SELECT_OBJECT),
-    IF_EQUALS("=", "equals", BlockType.IF_VARIABLE),
-    REPEAT_FOREVER("Forever", "forever", BlockType.REPEAT),
-    REPEAT_WHILE("While", "while", BlockType.REPEAT),
-    REPEAT_MULTIPLE("Multiple", "multiple", BlockType.REPEAT),
-    RETURN("Return", "return", BlockType.CONTROL)
-    ;
+    private static final HashMap<String, ActionType> actionTypes = new HashMap<>();
+
+    static {
+        JSONArray actions;
+
+        actions = TranspileUtils.DBC.getJSONArray("actions");
+        actionTypes.put("NULL", new ActionType(null, null, null));
+
+        for (Object o: actions){
+            JSONObject action = (JSONObject) o;
+            String id = action.getString("name");
+            String codeblockName = action.getString("codeblockName");
+            BlockType blockType = BlockType.fromCodeBlockName(codeblockName);
+            boolean cancellable = action.optBoolean("cancellable");
+            String codeName = nameToCodeName(id, blockType);
+            actionTypes.put(id, new ActionType(id, codeName, blockType, cancellable));
+        }
+    }
+
+    private static String nameToCodeName(String id, BlockType blockType){
+        if (blockType.getCodeName().equals("event")) return id;
+        if (id.equals("dynamic")) return null;
+
+        return switch (id) {
+            case "+" -> "add";
+            case "-" -> "sub";
+            case "x" -> "mult";
+            case "/" -> "div";
+            default -> id.toLowerCase().charAt(0) + id.substring(1);
+        };
+    }
+
+    private static final ArrayList<ActionType> dynamics = new ArrayList<>(){{
+        add(new ActionType("dynamic", null, BlockType.fromID("func")));
+        add(new ActionType("dynamic", null, BlockType.fromID("call_func")));
+        add(new ActionType("dynamic", null, BlockType.fromID("process")));
+        add(new ActionType("dynamic", null, BlockType.fromID("start_process")));
+    }};
 
 
     private static final HashMap<String, ArgsTable> baseFunsReturns = new HashMap<>() {{
@@ -51,6 +70,7 @@ public enum ActionType {
     ActionType(String id, String codeName, BlockType blockType){
         this(id, codeName, blockType, false);
     }
+
     ActionType(String id, String codeName, BlockType blockType, boolean cancellable){
         this.id = id;
         this.codeName = codeName;
@@ -66,19 +86,14 @@ public enum ActionType {
     }
 
     public static ActionType fromCodeName(String codeName) {
-        for (ActionType at :
-                ActionType.values()) {
+        for (ActionType at : ActionType.actionTypes.values()) {
             if (at.getCodeName() == null) continue;
             if (at.getCodeName().equals(codeName)) return at;
         }
         return null;
     }
-    public static ActionType fromID(String id, BlockType bt) {
-        for (ActionType at : ActionType.values()) {
-            if (at.getID() == null) continue;
-            if (at.getID().equals(id) && at.getBlock() == bt) return at;
-        }
-        return null;
+    public static ActionType fromID(String id) {
+        return actionTypes.get(id);
     }
 
     public BlockType getBlock() {
@@ -88,18 +103,18 @@ public enum ActionType {
     public boolean equals(ActionType other){
         // We ASSUME that future maintainers aren't dumb
         // and understand that IDs are *UNIQUE*
-        return this.id.equals(other.id);
+        // ...turns out IDs weren't unique. - 2024/07/17
+        return this.id.equals(other.id) && this.blockType.equals(other.blockType);
     }
 
     /**
      * This here bc am dumb.
-     * @param type
-     * @return
+     * @param type type of dynamic to return
+     * @return matching dynamic
      */
     public static ActionType getMatchingDynamicAction(BlockType type){
-        for (ActionType at: ActionType.values()) {
-            if (at.getID() == null || at.getBlock() == null) continue;
-            if (at.getID().equals("dynamic") && at.getBlock().equals(type)) return at;
+        for (ActionType dynamic: dynamics) {
+            if (dynamic.getBlock().equals(type)) return dynamic;
         }
         return null;
     }

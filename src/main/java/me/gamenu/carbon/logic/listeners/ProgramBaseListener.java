@@ -46,8 +46,9 @@ public class ProgramBaseListener extends BaseCarbonListener {
         for (CarbonDFParser.Single_defContext def: ctx.single_def()){
             defListener = new DefListener(programContext);
             def.enterRule(defListener);
-            tableList.add(defListener.getDefTable());
-
+            BlocksTable defTable = defListener.getDefTable();
+            if (!defTable.list().isEmpty())
+                tableList.add(defTable);
         }
     }
 

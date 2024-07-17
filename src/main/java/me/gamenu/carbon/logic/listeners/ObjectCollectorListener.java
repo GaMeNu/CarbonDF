@@ -44,7 +44,7 @@ public class ObjectCollectorListener extends BaseCarbonListener{
         for (CarbonDFParser.Single_defContext defCtx : ctx.single_def()){
             curType = new FunTable.FunType();
             enterStartdef(defCtx.startdef());
-            if (curType.getType() != BlockType.FUNC && curType.getType() != BlockType.PROCESS) continue;
+            if (curType.getType() != BlockType.fromID("func") && curType.getType() != BlockType.fromID("process")) continue;
             funTable.put(curType.getName(), curType);
             if (defCtx.defblock() == null) continue;
 
@@ -71,8 +71,8 @@ public class ObjectCollectorListener extends BaseCarbonListener{
         curType.setHidden(modifiers.isHidden());
         try {
             switch (((TerminalNode) ctx.def_keyword().getChild(0)).getSymbol().getType()) {
-                case FUNDEF_KEYWORD -> curType.setType(BlockType.FUNC);
-                case PROCDEF_KEYWORD -> curType.setType(BlockType.PROCESS);
+                case FUNDEF_KEYWORD -> curType.setType(BlockType.fromID("func"));
+                case PROCDEF_KEYWORD -> curType.setType(BlockType.fromID("process"));
                 case EVENTDEF_KEYWORD -> curType.setType(EventBlock.fromID(name).getBlockType());
                 default -> throw new ParseCancellationException(new UnrecognizedTokenException(ctx.def_keyword().getText()));
             }
@@ -80,8 +80,8 @@ public class ObjectCollectorListener extends BaseCarbonListener{
             throwError(e.getMessage(), ctx.def_name(), CarbonTranspileException.class);
         }
 
-        if (curType.getType() != BlockType.FUNC && curType.getType() != BlockType.PROCESS) return;
-        if (curType.getType() == BlockType.FUNC) {
+        if (curType.getType() != BlockType.fromID("func") && curType.getType() != BlockType.fromID("process")) return;
+        if (curType.getType() == BlockType.fromID("func")) {
 
 
             enterDef_params(ctx.def_params());

@@ -38,7 +38,7 @@ public class Bracket extends CodeBlock{
     Type bracketType;
 
     public Bracket(Direction direction, Type type) {
-        super(BlockType.BRACKET, ActionType.NULL);
+        super(BlockType.fromID("bracket"), ActionType.fromID("NULL"));
         this.bracketDirection = direction;
         this.bracketType = type;
     }

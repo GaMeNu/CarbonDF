@@ -40,8 +40,7 @@ def_params: def_param (ARG_SEP def_param)*;
 ret_params: def_param (ARG_SEP def_param)*;
 
 def_param
- : param_options?
-   SAFE_TEXT
+ : SAFE_TEXT param_options?
    ( WHITESPACES? ':' WHITESPACES? type_annotations )?
    ( WHITESPACES? '=' WHITESPACES? standalone_item)?
  ;

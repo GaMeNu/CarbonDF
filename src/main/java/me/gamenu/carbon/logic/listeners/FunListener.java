@@ -49,18 +49,18 @@ public class FunListener extends BaseCarbonListener {
         if (!funReturnVars.getArgDataList().isEmpty())
             block.getArgs().insertExtend(funReturnVars);
         if (ctx.target() != null){
-            if (blockType != BlockType.PLAYER_ACTION
-                    && blockType != BlockType.ENTITY_ACTION
-                    && blockType != BlockType.IF_PLAYER
-                    && blockType != BlockType.IF_ENTITY)
+            if (blockType != BlockType.fromID("player_action")
+                    && blockType != BlockType.fromID("entity_action")
+                    && blockType != BlockType.fromID("if_player")
+                    && blockType != BlockType.fromID("if_entity"))
                 throwError("Block target unsupported for block type.", ctx.single_fun_call(), CarbonTranspileException.class);
 
             if (ctx.target().target_any() == null) {
 
-                if (ctx.target().target_player() != null && (blockType != BlockType.PLAYER_ACTION && blockType != BlockType.IF_PLAYER))
+                if (ctx.target().target_player() != null && (blockType != BlockType.fromID("player_action") && blockType != BlockType.fromID("if_player")))
                     throwError("Block target unsupported for block type.", ctx.single_fun_call(), CarbonTranspileException.class);
 
-                if (ctx.target().target_entity() != null && (blockType != BlockType.ENTITY_ACTION && blockType != BlockType.IF_ENTITY))
+                if (ctx.target().target_entity() != null && (blockType != BlockType.fromID("player_action") && blockType != BlockType.fromID("if_entity")))
                     throwError("Block target unsupported for block type.", ctx.single_fun_call(), CarbonTranspileException.class);
             }
 
@@ -133,7 +133,7 @@ public class FunListener extends BaseCarbonListener {
         }
 
 
-        if (blockType == BlockType.SET_VARIABLE && funReturnVars.getArgDataList().isEmpty())
+        if (blockType == BlockType.fromID("set_var") && funReturnVars.getArgDataList().isEmpty())
             throwError("It is generally recommended to avoid using SetVariable blocks as normal calls, as it bypasses strong typing and is untested behavior", ctx, CarbonTranspileException.class, CarbonTranspileException.Severity.WARN);
 
         if (ActionType.getBaseFunsReturns().containsKey(actionType.getCodeName()) && funReturnVars.getArgDataList().isEmpty())
@@ -148,7 +148,7 @@ public class FunListener extends BaseCarbonListener {
         super.enterTags(ctx);
         if (ctx == null) return;
 
-        if (blockType == BlockType.CALL_FUNC)
+        if (blockType == BlockType.fromID("call_func"))
             throwError("Tags are not supported for this codeblock", ctx, CarbonTranspileException.class);
 
         CarbonDFParser.DictContext dictCtx = ctx.dict();
@@ -202,10 +202,12 @@ public class FunListener extends BaseCarbonListener {
      */
     private void handleDefinitionCall(CarbonDFParser.Single_fun_callContext ctx, String callName) {
         FunTable.FunType callType = programContext.getFunTable().get(callName);
-        switch (callType.getType()){
-            case FUNC -> blockType = BlockType.CALL_FUNC;
-            case PROCESS -> blockType = BlockType.START_PROCESS;
-            default -> throwError("Invalid Block Type "+callType.getType()+" for call name \""+callName+"\" found in fun table.", ctx, CarbonTranspileException.class);
+        if (callType.getType().equals(BlockType.fromID("func"))) {
+            blockType = BlockType.fromID("call_func");
+        } else if (callType.getType().equals(BlockType.fromID("process"))) {
+            blockType = BlockType.fromID("start_process");
+        } else {
+            throwError("Invalid Block Type " + callType.getType() + " for call name \"" + callName + "\" found in fun table.", ctx, CarbonTranspileException.class);
         }
 
         if (callType.getReturns() != null && callType.getReturns().getArgDataList().size() != funReturnVars.getArgDataList().size())
@@ -235,7 +237,13 @@ public class FunListener extends BaseCarbonListener {
         }
 
         if (callType.getParams() != null && !callType.getParams().getArgDataList().isEmpty() && ctx.call_params() == null && minParams > 0) {
-            throwError("Recieved incorrect amount of parameters (expected " + minParams + "-" + maxParams + ", recieved 0)", ctx, CarbonTranspileException.class);
+            // This could be improved with StringBuilder and replacing the entire section for the expected but :shrug:
+            if (minParams == maxParams)
+                throwError("Recieved incorrect amount of parameters (expected " + minParams + ", recieved 0)", ctx, CarbonTranspileException.class);
+            else if (maxParams == Integer.MAX_VALUE)
+                throwError("Recieved incorrect amount of parameters (expected at least " + minParams + ", recieved 0)", ctx, CarbonTranspileException.class);
+            else
+                throwError("Recieved incorrect amount of parameters (expected " + minParams + "-" + maxParams + ", recieved 0)", ctx, CarbonTranspileException.class);
         }
 
     }
@@ -245,7 +253,7 @@ public class FunListener extends BaseCarbonListener {
         super.enterCall_params(ctx);
 
 
-        if (blockType == BlockType.CALL_FUNC){
+        if (blockType == BlockType.fromID("call_func")){
             FunTable.FunType funType = programContext.getFunTable().get(((DefinitionBlock)block).getName());
             // Check params
             int minParams = 0;
@@ -280,7 +288,7 @@ public class FunListener extends BaseCarbonListener {
         }
 
         // Special case for Returns in functions
-        if (programContext.getCurrentFun() != null && actionType == ActionType.RETURN){
+        if (programContext.getCurrentFun() != null && actionType == ActionType.fromID("Return")){
             returnSpecialCase(ctx, newArgsTable);
         } else {
             block.getArgs().extend(newArgsTable);
@@ -324,10 +332,6 @@ public class FunListener extends BaseCarbonListener {
 
             VarArg retVar = varTable.get(retParam.getName());
 
-            if (resArg.getType() == ArgType.VAR)
-                System.out.println(((VarArg) resArg).getName());
-            else System.out.println(resArg.getType());
-
             // Check whether a player is attempting to return a return variable.
             if (resArg.getType() == ArgType.VAR){
                 for (CodeArg ret : currentFun.getReturns().getArgDataList()) {
@@ -338,7 +342,7 @@ public class FunListener extends BaseCarbonListener {
             }
 
 
-            blocksTable.add(new CodeBlock(BlockType.SET_VARIABLE, ActionType.SIMPLE_ASSIGN).setArgs(
+            blocksTable.add(new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("=")).setArgs(
                     new ArgsTable()
                             .addAtFirstNull(retVar)
                             .addAtFirstNull(resArg)
@@ -347,7 +351,7 @@ public class FunListener extends BaseCarbonListener {
     }
 
     private void performTypeValidation(CarbonDFParser.Call_paramsContext ctx){
-        if (block.getBlockType() == BlockType.CALL_FUNC || blockType == BlockType.START_PROCESS) {
+        if (block.getBlockType() == BlockType.fromID("call_func") || blockType == BlockType.fromID("start_process")) {
             String name = ((DefinitionBlock) block).getName();
             ArgsTable paramTable = programContext.getFunTable().get(name).getParams();
 
@@ -429,6 +433,7 @@ public class FunListener extends BaseCarbonListener {
 
         for (CarbonDFParser.Var_nameContext vnCtx : ctx.var_name()){
             String varName = vnCtx.getText();
+            if (!varTable.varExists(varName)) continue;
             if (varTable.get(varName).isConstant()){
                 throwError("Constant variable cannot be re-assigned after declaration.", ctx, CarbonTranspileException.class);
             }
@@ -504,7 +509,7 @@ public class FunListener extends BaseCarbonListener {
         ArgsTable resTable = new ArgsTable()
                 .addAtFirstNull(varArg)
                 .addAtFirstNull(valArg);
-        blocksTable.add(new CodeBlock(BlockType.SET_VARIABLE, ActionType.SIMPLE_ASSIGN).setArgs(resTable));
+        blocksTable.add(new CodeBlock(BlockType.fromID("func"), ActionType.fromID("=")).setArgs(resTable));
     }
 
 
@@ -567,7 +572,7 @@ public class FunListener extends BaseCarbonListener {
             }
         }
 
-        CodeBlock newBlock = new CodeBlock(BlockType.SET_VARIABLE, ActionType.CREATE_LIST)
+        CodeBlock newBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateList"))
                 .setArgs(resArgs);
 
         blocksTable.add(newBlock);
@@ -632,10 +637,10 @@ public class FunListener extends BaseCarbonListener {
 
         // Space-saving measure, no need to create the list blocks if the dict is empty anyway :shrug:
         if (!dictCtx.dict_pair().isEmpty()){
-            CodeBlock keysBlock = new CodeBlock(BlockType.SET_VARIABLE, ActionType.CREATE_LIST)
+            CodeBlock keysBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateList"))
                     .setArgs(resKeys);
 
-            CodeBlock valsBlock = new CodeBlock(BlockType.SET_VARIABLE, ActionType.CREATE_LIST)
+            CodeBlock valsBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateList"))
                     .setArgs(resVals);
 
             blocksTable
@@ -648,7 +653,7 @@ public class FunListener extends BaseCarbonListener {
 
         }
 
-        CodeBlock dictBlock = new CodeBlock(BlockType.SET_VARIABLE, ActionType.CREATE_DICT)
+        CodeBlock dictBlock = new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("CreateDict"))
                 .setArgs(resArgs);
 
 
@@ -681,7 +686,7 @@ public class FunListener extends BaseCarbonListener {
         ArgsTable resTable = new ArgsTable()
                 .addAtFirstNull(var)
                 .addAtFirstNull(val);
-        blocksTable.add(new CodeBlock(BlockType.SET_VARIABLE, ActionType.SIMPLE_ASSIGN).setArgs(resTable));
+        blocksTable.add(new CodeBlock(BlockType.fromID("set_var"), ActionType.fromID("=")).setArgs(resTable));
     }
 
     private void assignFunCall(ParserRuleContext ctx, List<CarbonDFParser.Var_nameContext> nameCtxLs, CarbonDFParser.Fun_callContext funCtx) {
