@@ -1,6 +1,9 @@
 # CarbonDF
 ### A tool for writing DiamondFire code using a custom language
 
+> [!WARNING]
+> This repository is now **DEPRECATED!** CarbonDF is now being remade on https://github.com/GaMeNu/CarbonRebuilt
+
 ## Why?
 DiamondFire code is annoying to write. Checking parameters and variables is slow, and you have to move around constantly.
 In addition, DiamondFire has lacks some features some people may want to use, such as strong types, and returning values.
